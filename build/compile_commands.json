@@ -1,0 +1,8 @@
+[
+{
+  "directory": "C:/github projects/c/build",
+  "command": "C:\\mingw64\\bin\\gcc.exe -o CMakeFiles\\MyApp.dir\\main.c.obj -c \"C:\\github projects\\c\\main.c\"",
+  "file": "C:/github projects/c/main.c",
+  "output": "C:/github projects/c/build/CMakeFiles/MyApp.dir/main.c.obj"
+}
+]

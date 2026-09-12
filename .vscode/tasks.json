@@ -1,0 +1,28 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "type": "shell",
+            "label": "Build local raylib game",
+            "command": "gcc",
+            "args": [
+                "main.c",
+                "-o",
+                "main.exe",
+                "-I",
+                "raylib\\include",
+                "-L",
+                "raylib\\lib",
+                "-lraylib",
+                "-lopengl32",
+                "-lgdi32",
+                "-lwinmm"
+            ],
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "problemMatcher": ["$gcc"]
+        }
+    ]
+}
