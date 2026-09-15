@@ -1,8 +1,8 @@
 [
 {
-  "directory": "C:/github projects/c/build",
-  "command": "C:\\mingw64\\bin\\gcc.exe -o CMakeFiles\\MyApp.dir\\main.c.obj -c \"C:\\github projects\\c\\main.c\"",
-  "file": "C:/github projects/c/main.c",
-  "output": "C:/github projects/c/build/CMakeFiles/MyApp.dir/main.c.obj"
+  "directory": "C:/tmp/chess-cpp/build",
+  "command": "C:\\mingw64\\bin\\gcc.exe  @CMakeFiles/MyApp.dir/includes_C.rsp -std=gnu11 -o CMakeFiles\\MyApp.dir\\main.c.obj -c C:\\tmp\\chess-cpp\\main.c",
+  "file": "C:/tmp/chess-cpp/main.c",
+  "output": "CMakeFiles/MyApp.dir/main.c.obj"
 }
 ]

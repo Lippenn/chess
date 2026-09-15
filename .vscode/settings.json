@@ -2,5 +2,5 @@
     "C_Cpp.errorSquiggles": "disabled",
     "C_Cpp.intelliSenseEngine": "disabled",
     "clangd.arguments": ["--compile-commands-dir=build"],
-    "clangd.fallbackFlags": ["-xc", "-std=c17"]
+    "clangd.fallbackFlags": ["-xc", "-std=c17"],
 }

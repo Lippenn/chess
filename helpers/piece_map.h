@@ -16,11 +16,27 @@ typedef struct
     int move_count;
     bool is_alive;
     bool is_occupied;
-    const char *color;
+    char color;
     const char *type;
+    int type_index;
     char *path_name;
     Texture2D texture;
 } PieceMapEntry;
+
+typedef struct
+{
+    int x;
+    int y;
+} RouteCheckObj;
+
+typedef enum
+{
+    EMPTY,
+    FRIENDLY,
+    ENEMY
+} RouteStatus;
+
+bool flip = false;
 
 typedef struct
 {
@@ -42,8 +58,8 @@ char *toLowerString(char *str)
     return str;
 }
 
-void assign_default_map_values(char *str, int index, int count, int x_pos, int y_pos,
-                               const char *color, const char *type, PieceMap *map)
+void assign_default_map_values(char *str, int index, int type_index, int count, int x_pos,
+                               int y_pos, char color, const char *type, PieceMap *map)
 {
     int len = snprintf(NULL, 0, "%s_%d", str, count);
 
@@ -51,20 +67,19 @@ void assign_default_map_values(char *str, int index, int count, int x_pos, int y
 
     snprintf(map->entries[index].key, len + 1, "%s_%d", str, count);
 
-    char lower_color[6];
     char lower_type[32];
 
-    strcpy(lower_color, color);
     strcpy(lower_type, type);
 
-    toLowerString(lower_color);
     toLowerString(lower_type);
 
-    len = snprintf(NULL, 0, "assets/%s-%s.png", lower_color, lower_type);
+    len =
+        snprintf(NULL, 0, "assets/%s-%s.png", strcmp(&color, "w") ? "white" : "black", lower_type);
 
     map->entries[index].path_name = malloc(len + 1);
 
-    snprintf(map->entries[index].path_name, len + 1, "assets/%s-%s.png", lower_color, lower_type);
+    snprintf(map->entries[index].path_name, len + 1, "assets/%s-%s.png",
+             strcmp(&color, "w") ? "white" : "black", lower_type);
 
     map->entries[index].value = index;
     map->entries[index].is_occupied = false;
@@ -73,6 +88,7 @@ void assign_default_map_values(char *str, int index, int count, int x_pos, int y
     map->entries[index].y_pos = y_pos;
     map->entries[index].type = type;
     map->entries[index].color = color;
+    map->entries[index].type_index = type_index;
     map->entries[index].move_count = 0;
 }
 
@@ -108,14 +124,36 @@ void init_map(PieceMap *map)
             {
                 char key[32];
                 const char *type = pieces[p].name;
-                const char *color = z == 0 ? "WHITE" : "BLACK";
+                char color = *(z == 1 ? "w" : "b");
 
-                snprintf(key, sizeof(key), "%s_%s", color, pieces[p].name);
+                snprintf(key, sizeof(key), "%s_%s", &color, pieces[p].name);
+                int x_pos = 0;
+                if (p > 0)
+                {
+                    if (p > 3)
+                    {
+                        if (!flip)
+                        {
+                            x_pos = p == 5 ? 3 : 4;
+                        }
+                        else
+                        {
+                            x_pos = p == 5 ? 4 : 3;
+                        }
+                    }
+                    else
+                    {
+                        x_pos = n % 2 == 0 ? p - 1 : 8 - p;
+                    }
+                }
+                else
+                {
+                    x_pos = square % 8;
+                }
 
-                int x_pos = square % 8;
-                int y_pos = z == 0 ? square / 8 : 6 + ((square - 16) / 8);
+                int y_pos = z == 0 ? abs(-1 + square / 8) : 6 + ((square - 16) / 8);
 
-                assign_default_map_values(key, square++, n, x_pos, y_pos, color, type, map);
+                assign_default_map_values(key, square++, p + 1, n, x_pos, y_pos, color, type, map);
             }
         }
     }
@@ -141,4 +179,20 @@ PieceMapEntry *find_entry_at_xy_pos(PieceMap *map, int x, int y)
     }
 
     return NULL;
+}
+
+RouteStatus piece_route_check(PieceMap *map, int x, int y, char color)
+{
+    for (int i = 0; i < TABLE_SIZE; i++)
+    {
+        if (map->entries[i].x_pos == x && map->entries[i].y_pos == y)
+        {
+            if (map->entries[i].color == color)
+                return FRIENDLY;
+
+            return ENEMY;
+        }
+    }
+
+    return EMPTY;
 }
