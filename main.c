@@ -94,91 +94,9 @@ void mouse_interactions()
     }
 }
 
-int route_check_rook(RouteCheckObj routes[14], PieceMapEntry rook)
-{
-    int count = 0;
-    // RIGHT
-    for (int x = rook.x_pos + 1; x < 8; x++)
-    {
-        RouteStatus status = piece_route_check(&map, x, rook.y_pos, rook.color);
-
-        if (status == EMPTY)
-        {
-            routes[count++] = (RouteCheckObj){x, rook.y_pos};
-        }
-        else if (status == ENEMY)
-        {
-            routes[count++] = (RouteCheckObj){x, rook.y_pos};
-            break;
-        }
-        else
-        {
-            break;
-        }
-    }
-    // LEFT
-    for (int x = rook.x_pos - 1; x > 0; x--)
-    {
-        RouteStatus status = piece_route_check(&map, x, rook.y_pos, rook.color);
-
-        if (status == EMPTY)
-        {
-            routes[count++] = (RouteCheckObj){x, rook.y_pos};
-        }
-        else if (status == ENEMY)
-        {
-            routes[count++] = (RouteCheckObj){x, rook.y_pos};
-            break;
-        }
-        else
-        {
-            break;
-        }
-    }
-    // UP
-    for (int y = rook.y_pos - 1; y > 0; y--)
-    {
-        RouteStatus status = piece_route_check(&map, rook.x_pos, y, rook.color);
-
-        if (status == EMPTY)
-        {
-            routes[count++] = (RouteCheckObj){rook.x_pos, y};
-        }
-        else if (status == ENEMY)
-        {
-            routes[count++] = (RouteCheckObj){rook.x_pos, y};
-            break;
-        }
-        else
-        {
-            break;
-        }
-    }
-    // DOWN
-    for (int y = rook.y_pos + 1; y < 8; y++)
-    {
-        RouteStatus status = piece_route_check(&map, rook.x_pos, y, rook.color);
-
-        if (status == EMPTY)
-        {
-            routes[count++] = (RouteCheckObj){rook.x_pos, y};
-        }
-        else if (status == ENEMY)
-        {
-            routes[count++] = (RouteCheckObj){rook.x_pos, y};
-            break;
-        }
-        else
-        {
-            break;
-        }
-    }
-    return count;
-}
-
 void calculate_piece_route()
 {
-    RouteCheckObj routes[14];
+    RouteCheckObj routes[27];
     // No NULL check
     int piece_type_index = selected_piece->type_index;
     char piece_move_count = selected_piece->move_count;
@@ -211,11 +129,18 @@ void calculate_piece_route()
             }
             break;
         case 2:
-            for (int i = 0; i < route_check_rook(routes, *selected_piece); i++)
+            // ROOK
+            for (int i = 0; i < route_check_rook(routes, *selected_piece, &map); i++)
             {
                 draw_piece_route(routes[i].x, routes[i].y);
             }
             break;
+        case 3:
+            // KNIGHT
+            // for (int i = 0; i < route_check_rook(routes, *selected_piece); i++)
+            // {
+            //     draw_piece_route(routes[i].x, routes[i].y);
+            // }
         }
     }
 }

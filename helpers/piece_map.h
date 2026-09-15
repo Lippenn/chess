@@ -196,3 +196,94 @@ RouteStatus piece_route_check(PieceMap *map, int x, int y, char color)
 
     return EMPTY;
 }
+
+int route_check_rook(RouteCheckObj routes[27], PieceMapEntry rook, PieceMap *map)
+{
+    int count = 0;
+    // RIGHT
+    for (int x = rook.x_pos + 1; x < 8; x++)
+    {
+        RouteStatus status = piece_route_check(map, x, rook.y_pos, rook.color);
+
+        if (status == EMPTY)
+        {
+            routes[count++] = (RouteCheckObj){x, rook.y_pos};
+        }
+        else if (status == ENEMY)
+        {
+            routes[count++] = (RouteCheckObj){x, rook.y_pos};
+            break;
+        }
+        else
+        {
+            break;
+        }
+    }
+    // LEFT
+    for (int x = rook.x_pos - 1; x > 0; x--)
+    {
+        RouteStatus status = piece_route_check(map, x, rook.y_pos, rook.color);
+
+        if (status == EMPTY)
+        {
+            routes[count++] = (RouteCheckObj){x, rook.y_pos};
+        }
+        else if (status == ENEMY)
+        {
+            routes[count++] = (RouteCheckObj){x, rook.y_pos};
+            break;
+        }
+        else
+        {
+            break;
+        }
+    }
+    // UP
+    for (int y = rook.y_pos - 1; y > 0; y--)
+    {
+        RouteStatus status = piece_route_check(map, rook.x_pos, y, rook.color);
+
+        if (status == EMPTY)
+        {
+            routes[count++] = (RouteCheckObj){rook.x_pos, y};
+        }
+        else if (status == ENEMY)
+        {
+            routes[count++] = (RouteCheckObj){rook.x_pos, y};
+            break;
+        }
+        else
+        {
+            break;
+        }
+    }
+    // DOWN
+    for (int y = rook.y_pos + 1; y < 8; y++)
+    {
+        RouteStatus status = piece_route_check(map, rook.x_pos, y, rook.color);
+
+        if (status == EMPTY)
+        {
+            routes[count++] = (RouteCheckObj){rook.x_pos, y};
+        }
+        else if (status == ENEMY)
+        {
+            routes[count++] = (RouteCheckObj){rook.x_pos, y};
+            break;
+        }
+        else
+        {
+            break;
+        }
+    }
+    return count;
+}
+
+// int check_knight_obj(RouteCheckObj routes[27], PieceMapEntry knight, PieceMap *map)
+// {
+//     int count = 0;
+//     for (int i = 0; i < 4; i++)
+//     {
+//         if(knight.x_pos)
+//     }
+// }
