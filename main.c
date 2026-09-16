@@ -13,6 +13,8 @@ typedef enum
     APPLYING
 } StatusType;
 
+const char *enumNames[] = {"NONE", "SELECTING", "APPLYING"};
+
 StatusType status = NONE;
 
 PieceMapEntry *selected_piece = NULL;
@@ -82,18 +84,6 @@ void draw_piece_route(int x, int y)
     DrawCircle((x + 0.5) * TILE_SIZE, (y + 0.5) * TILE_SIZE, floor(TILE_SIZE) / 8, light_red);
 }
 
-void mouse_interactions()
-{
-    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
-    {
-        Vector2 mouse = GetMousePosition();
-        int x_pos = floor(mouse.x / TILE_SIZE);
-        int y_pos = floor(mouse.y / TILE_SIZE);
-        selected_piece = find_entry_at_xy_pos(&map, x_pos, y_pos);
-        status = SELECTING;
-    }
-}
-
 void calculate_piece_route()
 {
     RouteCheckObj routes[27];
@@ -108,7 +98,7 @@ void calculate_piece_route()
         {
         case 1:
             // PAWN
-            if (is_white)
+            if (!is_white)
             {
                 draw_piece_route(selected_piece->x_pos, selected_piece->y_pos - 1);
             }
@@ -118,7 +108,7 @@ void calculate_piece_route()
             }
             if (piece_move_count == 0)
             {
-                if (is_white)
+                if (!is_white)
                 {
                     draw_piece_route(selected_piece->x_pos, selected_piece->y_pos - 2);
                 }
@@ -137,10 +127,10 @@ void calculate_piece_route()
             break;
         case 3:
             // KNIGHT
-            // for (int i = 0; i < route_check_rook(routes, *selected_piece); i++)
-            // {
-            //     draw_piece_route(routes[i].x, routes[i].y);
-            // }
+            for (int i = 0; i < route_check_knight(routes, *selected_piece, &map); i++)
+            {
+                draw_piece_route(routes[i].x, routes[i].y);
+            }
         }
     }
 }
@@ -149,10 +139,33 @@ void board_details()
 {
     if (!!selected_piece)
     {
-        int x_pos = selected_piece->x_pos;
-        int y_pos = selected_piece->y_pos;
-        draw_piece_selection(x_pos, y_pos);
-        calculate_piece_route();
+        if (status == SELECTING)
+        {
+            int x_pos = selected_piece->x_pos;
+            int y_pos = selected_piece->y_pos;
+            draw_piece_selection(x_pos, y_pos);
+            calculate_piece_route();
+        }
+    }
+}
+
+void mouse_interactions()
+{
+    if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+    {
+        Vector2 mouse = GetMousePosition();
+        int x_pos = floor(mouse.x / TILE_SIZE);
+        int y_pos = floor(mouse.y / TILE_SIZE);
+        if (status == NONE)
+        {
+            selected_piece = find_entry_at_xy_pos(&map, x_pos, y_pos);
+            status = SELECTING;
+        }
+        else
+        {
+            move_piece(x_pos, y_pos, selected_piece, &map);
+            status = NONE;
+        }
     }
 }
 

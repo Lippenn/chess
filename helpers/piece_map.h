@@ -124,7 +124,7 @@ void init_map(PieceMap *map)
             {
                 char key[32];
                 const char *type = pieces[p].name;
-                char color = *(z == 1 ? "w" : "b");
+                char color = *(z == 0 ? "w" : "b");
 
                 snprintf(key, sizeof(key), "%s_%s", &color, pieces[p].name);
                 int x_pos = 0;
@@ -279,11 +279,52 @@ int route_check_rook(RouteCheckObj routes[27], PieceMapEntry rook, PieceMap *map
     return count;
 }
 
-// int check_knight_obj(RouteCheckObj routes[27], PieceMapEntry knight, PieceMap *map)
-// {
-//     int count = 0;
-//     for (int i = 0; i < 4; i++)
-//     {
-//         if(knight.x_pos)
-//     }
-// }
+int route_check_knight(RouteCheckObj routes[27], PieceMapEntry knight, PieceMap *map)
+{
+    int count = 0;
+
+    int x_pos = knight.x_pos;
+    int y_pos = knight.y_pos;
+
+    const RouteCheckObj moves[8] = {
+        {-2, 1}, {-1, 2}, {1, 2}, {2, 1}, {-2, -1}, {-1, -2}, {1, -2}, {2, 1},
+    };
+
+    for (int i = 0; i < 8; i++)
+    {
+        bool flag = true;
+        int x = moves[i].x;
+        int y = moves[i].y;
+
+        if ((x_pos + x) < 0 && (x_pos + x) >= 8)
+        {
+            flag = false;
+        }
+        if ((y_pos + y) < 0 && (y_pos + y) >= 8)
+        {
+            flag = false;
+        }
+        if (flag)
+        {
+            routes[count] = (RouteCheckObj){x_pos + x, y_pos + y};
+        }
+    }
+    return count;
+}
+
+void move_piece(int x, int y, PieceMapEntry *piece, PieceMap *map)
+{
+
+    if (piece == NULL || map == NULL)
+    {
+        return;
+    }
+    if (piece->type_index <= 0)
+    {
+        return;
+    }
+
+    piece->x_pos = x;
+    piece->y_pos = y;
+    piece->move_count++;
+}
