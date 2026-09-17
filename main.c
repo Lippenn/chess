@@ -131,6 +131,28 @@ void calculate_piece_route()
             {
                 draw_piece_route(routes[i].x, routes[i].y);
             }
+            break;
+        case 4:
+            // BISHOP
+            for (int i = 0; i < route_check_bishop(routes, *selected_piece, &map, -1); i++)
+            {
+                draw_piece_route(routes[i].x, routes[i].y);
+            }
+            break;
+        case 5:
+            // QUEEN
+            for (int i = 0; i < route_check_queen(routes, *selected_piece, &map); i++)
+            {
+                draw_piece_route(routes[i].x, routes[i].y);
+            }
+            break;
+        case 6:
+            // KING
+            for (int i = 0; i < route_check_king(routes, *selected_piece, &map); i++)
+            {
+                draw_piece_route(routes[i].x, routes[i].y);
+            }
+            break;
         }
     }
 }

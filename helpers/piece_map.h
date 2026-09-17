@@ -239,7 +239,7 @@ int route_check_rook(RouteCheckObj routes[27], PieceMapEntry rook, PieceMap *map
         }
     }
     // UP
-    for (int y = rook.y_pos - 1; y > 0; y--)
+    for (int y = rook.y_pos - 1; y >= 0; y--)
     {
         RouteStatus status = piece_route_check(map, rook.x_pos, y, rook.color);
 
@@ -306,7 +306,138 @@ int route_check_knight(RouteCheckObj routes[27], PieceMapEntry knight, PieceMap 
         }
         if (flag)
         {
-            routes[count] = (RouteCheckObj){x_pos + x, y_pos + y};
+            RouteStatus status = piece_route_check(map, x_pos + x, y_pos + y, knight.color);
+            if (status == EMPTY || status == ENEMY)
+            {
+                routes[count++] = (RouteCheckObj){x_pos + x, y_pos + y};
+            }
+        }
+    }
+    return count;
+}
+
+int route_check_bishop(RouteCheckObj routes[27], PieceMapEntry bishop, PieceMap *map, int _count)
+{
+    int count = (_count == -1) ? 0 : _count;
+    // int count = 0;
+
+    int x_pos = bishop.x_pos;
+    int y_pos = bishop.y_pos;
+
+    int track_x = x_pos;
+    int track_y = y_pos;
+
+    // TOP LEFT
+    while (track_x >= 0 && track_y >= 0 && track_x < 8 && track_y < 8)
+    {
+        RouteStatus status = piece_route_check(map, track_x, track_y, bishop.color);
+        if (status == EMPTY)
+        {
+            routes[count++] = (RouteCheckObj){track_x, track_y};
+        }
+        if (status == ENEMY)
+        {
+            routes[count++] = (RouteCheckObj){track_x, track_y};
+            break;
+        }
+        track_x = track_x - 1;
+        track_y = track_y - 1;
+    }
+    track_x = x_pos;
+    track_y = y_pos;
+    // TOP RIGHT
+    while (track_x >= 0 && track_y >= 0 && track_x < 8 && track_y < 8)
+    {
+        RouteStatus status = piece_route_check(map, track_x, track_y, bishop.color);
+        if (status == EMPTY)
+        {
+            routes[count++] = (RouteCheckObj){track_x, track_y};
+        }
+        if (status == ENEMY)
+        {
+            routes[count++] = (RouteCheckObj){track_x, track_y};
+            break;
+        }
+        track_x = track_x + 1;
+        track_y = track_y - 1;
+    }
+    track_x = x_pos;
+    track_y = y_pos;
+    // BOTTOM LEFT
+    while (track_x >= 0 && track_y >= 0 && track_x < 8 && track_y < 8)
+    {
+        RouteStatus status = piece_route_check(map, track_x, track_y, bishop.color);
+        if (status == EMPTY)
+        {
+            routes[count++] = (RouteCheckObj){track_x, track_y};
+        }
+        if (status == ENEMY)
+        {
+            routes[count++] = (RouteCheckObj){track_x, track_y};
+            break;
+        }
+        track_x = track_x - 1;
+        track_y = track_y + 1;
+    }
+    track_x = x_pos;
+    track_y = y_pos;
+    // BOTTOM RIGHT
+    while (track_x >= 0 && track_y >= 0 && track_x < 8 && track_y < 8)
+    {
+        RouteStatus status = piece_route_check(map, track_x, track_y, bishop.color);
+        if (status == EMPTY)
+        {
+            routes[count++] = (RouteCheckObj){track_x, track_y};
+        }
+        if (status == ENEMY)
+        {
+            routes[count++] = (RouteCheckObj){track_x, track_y};
+            break;
+        }
+        track_x = track_x + 1;
+        track_y = track_y + 1;
+    }
+    return count;
+}
+
+int route_check_queen(RouteCheckObj routes[27], PieceMapEntry queen, PieceMap *map)
+{
+    int count = 0;
+    count = route_check_rook(routes, queen, map);
+    return route_check_bishop(routes, queen, map, count);
+}
+
+int route_check_king(RouteCheckObj routes[27], PieceMapEntry king, PieceMap *map)
+{
+    const RouteCheckObj moves[8] = {
+        {-1, -1}, {0, -1}, {1, -1}, {1, 0}, {1, 1}, {0, 1}, {-1, 1}, {-1, 0},
+    };
+
+    int x_pos = king.x_pos;
+    int y_pos = king.y_pos;
+    int count = 0;
+
+    for (int i = 0; i < 8; i++)
+    {
+        bool flag = true;
+        int x = moves[i].x;
+        int y = moves[i].y;
+
+        if ((x_pos + x) < 0 && (x_pos + x) >= 8)
+        {
+            flag = false;
+        }
+        if ((y_pos + y) < 0 && (y_pos + y) >= 8)
+        {
+            flag = false;
+        }
+        if (flag)
+        {
+            RouteStatus status = piece_route_check(map, x_pos + x, y_pos + y, king.color);
+            if (status == EMPTY || status == ENEMY)
+            {
+                routes[count++] = (RouteCheckObj){x_pos + x, y_pos + y};
+            }
         }
     }
     return count;
