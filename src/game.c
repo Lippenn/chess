@@ -65,6 +65,15 @@ void init_map()
     }
 }
 
+void print_map()
+{
+    printf("---------------------------\n");
+    for (int i = 0; i < MAX_PIECES; i++)
+    {
+        printf("%c\n", map.entries[i].is_alive ? 'T' : 'F');
+    }
+}
+
 PieceMapEntry *find_entry_at_xy_pos(int x, int y)
 {
     for (int i = 0; i < MAX_PIECES; i++)
@@ -283,9 +292,8 @@ void calculate_piece_route(PieceMapEntry *piece)
 
 void capture_piece(XYPosition *pos)
 {
-    printf("CAPTURE\n");
-    PieceMapEntry piece = *find_entry_at_xy_pos(pos->x, pos->y);
-    piece.is_alive = false;
+    PieceMapEntry *piece = find_entry_at_xy_pos(pos->x, pos->y);
+    piece->is_alive = false;
 }
 
 void move_piece(PieceMapEntry *piece, int x, int y)

@@ -3,8 +3,6 @@
 
 #include "defs.h"
 
-extern PieceMap map;
-
 extern RenderTexture2D board_texture;
 extern RenderTexture2D header_texture;
 extern Rectangle board;

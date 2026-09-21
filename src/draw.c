@@ -8,6 +8,7 @@ RenderTexture2D board_texture;
 RenderTexture2D header_texture;
 Rectangle board = {0, 100, BOARD_WIDTH, BOARD_HEIGHT};
 
+extern PieceMap map;
 extern GameState game_state;
 extern OpenRoutes open_routes;
 

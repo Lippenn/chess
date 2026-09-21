@@ -17,3 +17,12 @@
 330	700	8116799208300146	Chess.exe	abc4bdd9e1ae0a73
 34	285	8116799480179480	CMakeFiles/Chess.dir/src/game.c.obj	264ad253b29ae906
 286	625	8116799482704685	Chess.exe	abc4bdd9e1ae0a73
+8	252	8116815276118439	CMakeFiles/Chess.dir/src/main.c.obj	eae3bcc34dc7ea71
+23	314	8116815276263830	CMakeFiles/Chess.dir/src/game.c.obj	264ad253b29ae906
+314	709	8116815279172855	Chess.exe	abc4bdd9e1ae0a73
+9	275	8116816480123156	CMakeFiles/Chess.dir/src/main.c.obj	eae3bcc34dc7ea71
+23	325	8116816480263289	CMakeFiles/Chess.dir/src/draw.c.obj	b7e4f66c95ef2e94
+35	348	8116816480374800	CMakeFiles/Chess.dir/src/game.c.obj	264ad253b29ae906
+348	721	8116816483516081	Chess.exe	abc4bdd9e1ae0a73
+36	351	8116816901286857	CMakeFiles/Chess.dir/src/game.c.obj	264ad253b29ae906
+352	689	8116816904445874	Chess.exe	abc4bdd9e1ae0a73
