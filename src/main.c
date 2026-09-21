@@ -18,6 +18,7 @@ void initalize() { init_map(); }
 
 void draw()
 {
+
     ClearBackground(RAYWHITE);
     DrawTextureRec(header_texture.texture, (Rectangle){0, 0, HEADER_WIDTH, -HEADER_HEIGHT},
                    (Vector2){0, 0}, WHITE);

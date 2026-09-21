@@ -42,7 +42,7 @@ rule CUSTOM_COMMAND
 # Rule for re-running cmake.
 
 rule RERUN_CMAKE
-  command = C:\mingw64\bin\cmake.exe --regenerate-during-build -S"C:\github projects\chess cpp" -B"C:\github projects\chess cpp\build"
+  command = C:\mingw64\bin\cmake.exe --regenerate-during-build -SC:\tmp\chess-cpp -BC:\tmp\chess-cpp\build
   description = Re-running CMake...
   generator = 1
 

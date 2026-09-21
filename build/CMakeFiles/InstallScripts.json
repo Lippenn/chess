@@ -1,7 +1,7 @@
 {
 	"InstallScripts" : 
 	[
-		"C:/github projects/chess cpp/build/cmake_install.cmake"
+		"C:/tmp/chess-cpp/build/cmake_install.cmake"
 	],
 	"Parallel" : false
 }

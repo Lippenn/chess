@@ -22,6 +22,10 @@ target_link_directories(Chess PRIVATE
     ${CMAKE_SOURCE_DIR}/raylib/lib
 )
 
+target_compile_definitions(Chess PRIVATE
+    ROOT_PATH="${CMAKE_SOURCE_DIR}"
+)
+
 target_link_libraries(Chess PRIVATE
     raylib
     opengl32

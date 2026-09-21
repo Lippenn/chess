@@ -65,13 +65,13 @@ void init_map()
     }
 }
 
-PieceMapEntry *find_entry_at_xy_pos(PieceMap *map, int x, int y)
+PieceMapEntry *find_entry_at_xy_pos(int x, int y)
 {
     for (int i = 0; i < MAX_PIECES; i++)
     {
-        if (map->entries[i].x_pos == x && map->entries[i].y_pos == y)
+        if (map.entries[i].x_pos == x && map.entries[i].y_pos == y)
         {
-            return &map->entries[i];
+            return &map.entries[i];
         }
     }
     return NULL;
@@ -83,7 +83,7 @@ SquareStatusEnum get_square_status_at_xy_pos(int x, int y, char color)
     {
         for (int i = 0; i < MAX_PIECES; i++)
         {
-            if (map.entries[i].x_pos == x && map.entries[i].y_pos == y)
+            if (map.entries[i].x_pos == x && map.entries[i].y_pos == y && map.entries[i].is_alive)
             {
                 if (map.entries[i].color == color)
                 {
@@ -281,7 +281,12 @@ void calculate_piece_route(PieceMapEntry *piece)
     current_piece = piece;
 }
 
-void capture_piece() {} // TODO : capture piece
+void capture_piece(XYPosition *pos)
+{
+    printf("CAPTURE\n");
+    PieceMapEntry piece = *find_entry_at_xy_pos(pos->x, pos->y);
+    piece.is_alive = false;
+}
 
 void move_piece(PieceMapEntry *piece, int x, int y)
 {
@@ -290,8 +295,9 @@ void move_piece(PieceMapEntry *piece, int x, int y)
     {
         if (open_route->is_enemy)
         {
-            capture_piece();
+            capture_piece(open_route);
         }
+        printf("TEST\n");
         piece->x_pos = x;
         piece->y_pos = y;
         piece->move_count += 1;
@@ -312,7 +318,7 @@ void board_handle_click(PieceMap *map, float mouse_x, float mouse_y)
     if (x < 0 || x >= 8 || y < 0 || y >= 8)
         return;
 
-    PieceMapEntry *piece = find_entry_at_xy_pos(map, x, y);
+    PieceMapEntry *piece = find_entry_at_xy_pos(x, y);
 
     if (game_state.status == NONE)
     {
