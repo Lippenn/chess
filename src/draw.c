@@ -1,38 +1,45 @@
 #include "../include/draw.h"
 #include "../raylib/include/raylib.h"
 #include "./textures.h"
+#include "game.h"
 #include <math.h>
 #include <stdio.h>
 
 RenderTexture2D board_texture;
 RenderTexture2D header_texture;
+RenderTexture2D footer_texture;
+
 Rectangle board = {0, 100, BOARD_WIDTH, BOARD_HEIGHT};
 
 extern PieceMap map;
 extern GameState game_state;
 extern OpenRoutes open_routes;
+extern PieceMapEntry *current_piece;
 
 void set_header_texture()
 {
     BeginTextureMode(header_texture);
-
     ClearBackground((Color){35, 35, 35, 255});
-
     DrawRectangle(0, HEADER_HEIGHT - 3, 600, 3, (Color){207, 135, 65, 255});
 
     DrawText("CHESS", 25, 18, 32, RAYWHITE);
-
     DrawText("Classic Chess", 25, 55, 20, (Color){160, 160, 160, 255});
 
     char turn_text[32];
     snprintf(turn_text, sizeof(turn_text), "TURN %d", (game_state.move + 1) / 2);
 
     DrawText(turn_text, 320, 24, 18, (Color){180, 180, 180, 255});
-
     const char *turn_text_color = game_state.color == 'w' ? "WHITE TO MOVE" : "BLACK TO MOVE";
-
     DrawText(turn_text_color, 320, 50, 20, RAYWHITE);
 
+    EndTextureMode();
+}
+
+void set_footer_texture()
+{
+    BeginTextureMode(footer_texture);
+    ClearBackground((Color){35, 35, 35, 255});
+    DrawRectangle(0, 0, FOOTER_WIDTH, 3, (Color){207, 135, 65, 255});
     EndTextureMode();
 }
 
@@ -52,6 +59,25 @@ void set_board_texture()
     }
 
     EndTextureMode();
+}
+
+void draw_screen_image(Texture2D texture, int x, int y)
+{
+    float scale = 65.0f / texture.width;
+    DrawTextureEx(texture, (Vector2){x, y}, 0.0f, scale, WHITE);
+}
+
+void draw_promotion_overlay()
+{
+    int offset = current_piece->color == 'w' ? 0 : 4;
+    Rectangle panel = {125, 275, 350, 150};
+    DrawRectangle(0, 0, 600, HEADER_HEIGHT + 600, Fade(BLACK, 0.6f));
+    DrawRectangleRec(panel, RAYWHITE);
+    DrawText("PROMOTE", 225, 290, 30, BLACK);
+    for (int i = offset; i < 4 + offset; i++)
+    {
+        draw_screen_image(promotion_pieces[i].texture, 155 + (i - offset) * TILE_SIZE, 332);
+    }
 }
 
 Texture2D get_piece_texture(PieceTypeEnum type, char color)
@@ -140,9 +166,35 @@ void draw_pieces()
 
 void draw_open_routes()
 {
-    // printf("%i\n", open_routes.count);
     for (int i = 0; i < open_routes.count; i++)
     {
         draw_piece_route(open_routes.routes[i].x, open_routes.routes[i].y);
+    }
+}
+
+void draw_selection()
+{
+    if (current_piece && current_piece->is_alive && game_state.status == SELECTING)
+    {
+        draw_piece_selection(current_piece->x_pos, current_piece->y_pos);
+    }
+}
+
+void draw_king_attacked()
+{
+    PieceMapEntry *white_king = &map.entries[28];
+    PieceMapEntry *black_king = &map.entries[4];
+
+    if (white_king != NULL &&
+        calculate_square_attacked((XYPosition){white_king->x_pos, white_king->y_pos},
+                                  white_king->color))
+    {
+        draw_king_danger(white_king->x_pos, white_king->y_pos);
+    }
+    if (black_king != NULL &&
+        calculate_square_attacked((XYPosition){black_king->x_pos, black_king->y_pos},
+                                  black_king->color))
+    {
+        draw_king_danger(black_king->x_pos, black_king->y_pos);
     }
 }

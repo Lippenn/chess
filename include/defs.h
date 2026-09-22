@@ -10,6 +10,9 @@
 #define HEADER_HEIGHT 100
 #define HEADER_WIDTH 600
 
+#define FOOTER_HEIGHT 100
+#define FOOTER_WIDTH 600
+
 #define BOARD_HEIGHT 600
 #define BOARD_WIDTH 600
 
@@ -46,6 +49,9 @@ typedef struct
     int move;
     char color;
     GameStateEnum status;
+    bool promotion_active;
+    int promotion_x;
+    int promotion_y;
 } GameState;
 
 typedef struct
@@ -89,6 +95,19 @@ typedef struct
     int count;
 } OpenRoutes;
 
+typedef struct
+{
+    Texture2D texture;
+    PieceTypeEnum type;
+} PromotionPiece;
+
 extern OpenRoutes open_routes;
+
+extern int pawn_directions[2];
+extern int knight_directions[8][2];
+extern int bishop_directions[4][2];
+extern int rook_directions[4][2];
+extern int king_directions[8][2];
+extern int king_castle_directions[2][2];
 
 #endif
