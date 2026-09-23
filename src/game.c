@@ -88,14 +88,11 @@ void init_map()
     for (int i = 0; i < MAX_PIECES; i++)
     {
         StarterPiece starter_piece = starter_pieces[i];
-        map.entries[i] = (PieceMapEntry){i,
-                                         starter_piece.type,
-                                         starter_piece.color,
-                                         starter_piece.x,
-                                         starter_piece.y,
-                                         i > 15 || i == 4 ? true : false,
-                                         get_piece_texture(starter_piece.type, starter_piece.color),
-                                         0};
+        map.entries[i] = (PieceMapEntry){
+            i, starter_piece.type, starter_piece.color, starter_piece.x, starter_piece.y,
+            //  true,
+            i > 23 || i == 4 ? true : false,
+            get_piece_texture(starter_piece.type, starter_piece.color), 0};
     }
 }
 
@@ -123,7 +120,7 @@ void print_map()
     }
 }
 
-PieceMapEntry *find_entry_at_xy_pos(int x, int y)
+PieceMapEntry *get_entry_at_xy_pos(int x, int y)
 {
     for (int i = 0; i < MAX_PIECES; i++)
     {
@@ -176,17 +173,20 @@ XYPosition *is_xy_in_open_routes(int x, int y)
 
 bool simulate_if_king_check(PieceMapEntry *piece, XYPosition pos)
 {
-    int old_x = piece->x_pos;
-    int old_y = piece->y_pos;
-
+    PieceMap temp_map = map;
+    SquareStatusEnum square_type = get_square_status_at_xy_pos(pos.x, pos.y, piece->color);
+    if (square_type == ENEMY)
+    {
+        PieceMapEntry *enemy_piece = get_entry_at_xy_pos(pos.x, pos.y);
+        if (enemy_piece)
+        {
+            enemy_piece->is_alive = false;
+        }
+    }
     piece->x_pos = pos.x;
     piece->y_pos = pos.y;
-
     bool in_check = is_king_in_check(piece->color);
-
-    piece->x_pos = old_x;
-    piece->y_pos = old_y;
-
+    map = temp_map;
     return in_check;
 }
 
@@ -233,7 +233,7 @@ void calculate_pawn_route(PieceMapEntry *pawn)
             SquareStatusEnum status = get_square_status_at_xy_pos(x, pawn->y_pos, pawn->color);
             if (status == ENEMY)
             {
-                PieceMapEntry *enemy_piece = find_entry_at_xy_pos(x, pawn->y_pos);
+                PieceMapEntry *enemy_piece = get_entry_at_xy_pos(x, pawn->y_pos);
                 if (enemy_piece && enemy_piece->type == PAWN && enemy_piece->move_count == 1)
                 {
                     add_available_route(&count, (XYPosition){x, pawn->y_pos + direction, true},
@@ -334,7 +334,7 @@ void calculate_king_route(PieceMapEntry *king)
 
             int rook_x = direction > 0 ? 7 : 0;
 
-            PieceMapEntry *rook = find_entry_at_xy_pos(rook_x, king->y_pos);
+            PieceMapEntry *rook = get_entry_at_xy_pos(rook_x, king->y_pos);
 
             if (!rook || rook->type != ROOK || !rook->is_alive || rook->color != king->color ||
                 rook->move_count != 0)
@@ -405,8 +405,11 @@ void calculate_piece_route(PieceMapEntry *piece)
 
 void capture_piece(XYPosition *pos)
 {
-    PieceMapEntry *piece = find_entry_at_xy_pos(pos->x, pos->y);
-    piece->is_alive = false;
+    PieceMapEntry *piece = get_entry_at_xy_pos(pos->x, pos->y);
+    if (piece)
+    {
+        piece->is_alive = false;
+    }
 }
 
 void check_castle_king(PieceMapEntry *king, int x, int y)
@@ -416,10 +419,22 @@ void check_castle_king(PieceMapEntry *king, int x, int y)
 
     if (difference > 1)
     {
-        PieceMapEntry *rook = find_entry_at_xy_pos(x > 4 ? 7 : 0, y);
+        PieceMapEntry *rook = get_entry_at_xy_pos(x > 4 ? 7 : 0, y);
         if (rook && rook->is_alive && rook->type == ROOK)
         {
             rook->x_pos = x + direction;
+        }
+    }
+}
+
+void check_en_passant(PieceMapEntry *pawn, int x, int y)
+{
+    if ((x - pawn->x_pos) != 0)
+    {
+        PieceMapEntry *piece = get_entry_at_xy_pos(x, pawn->y_pos);
+        if (piece && piece->type == PAWN)
+        {
+            piece->is_alive = false;
         }
     }
 }
@@ -445,6 +460,10 @@ void move_piece(PieceMapEntry *piece, int x, int y)
     XYPosition *open_route = is_xy_in_open_routes(x, y);
     if (!(open_route == NULL) && piece)
     {
+        if (simulate_if_king_check(piece, (XYPosition){x, y}))
+        {
+            return;
+        }
         if (piece->type == KING)
         {
             check_castle_king(piece, x, y);
@@ -456,11 +475,7 @@ void move_piece(PieceMapEntry *piece, int x, int y)
         if (piece->type == PAWN)
         {
             check_pawn_promotion(piece, x, y);
-        }
-
-        if (simulate_if_king_check(piece, (XYPosition){x, y}))
-        {
-            return;
+            check_en_passant(piece, x, y);
         }
         piece->x_pos = x;
         piece->y_pos = y;
@@ -475,7 +490,7 @@ void move_piece(PieceMapEntry *piece, int x, int y)
 
 void handle_board_click(int x, int y)
 {
-    PieceMapEntry *piece = find_entry_at_xy_pos(x, y);
+    PieceMapEntry *piece = get_entry_at_xy_pos(x, y);
 
     if (game_state.status == NONE)
     {
@@ -574,8 +589,7 @@ bool check_attacked_by_pawn(XYPosition pos, char color)
 
         if (status == ENEMY)
         {
-            PieceMapEntry *enemy_piece =
-                find_entry_at_xy_pos(x + pawn_directions[i], y + direction);
+            PieceMapEntry *enemy_piece = get_entry_at_xy_pos(x + pawn_directions[i], y + direction);
             if (enemy_piece->type == PAWN && enemy_piece->is_alive)
             {
                 return true;
@@ -604,7 +618,7 @@ bool check_attacked_by_bishop_and_rook(XYPosition pos, char color)
 
             if (status == ENEMY)
             {
-                PieceMapEntry *enemy_piece = find_entry_at_xy_pos(x, y);
+                PieceMapEntry *enemy_piece = get_entry_at_xy_pos(x, y);
                 if (enemy_piece->is_alive &&
                     (enemy_piece->type == BISHOP || enemy_piece->type == QUEEN))
                 {
@@ -634,7 +648,7 @@ bool check_attacked_by_bishop_and_rook(XYPosition pos, char color)
 
             if (status == ENEMY)
             {
-                PieceMapEntry *enemy_piece = find_entry_at_xy_pos(x, y);
+                PieceMapEntry *enemy_piece = get_entry_at_xy_pos(x, y);
                 if (enemy_piece->is_alive &&
                     (enemy_piece->type == ROOK || enemy_piece->type == QUEEN))
                 {
@@ -660,7 +674,7 @@ bool check_attacked_by_knight(XYPosition pos, char color)
         SquareStatusEnum status = get_square_status_at_xy_pos(x, y, color);
         if (status == ENEMY)
         {
-            PieceMapEntry *enemy_piece = find_entry_at_xy_pos(x, y);
+            PieceMapEntry *enemy_piece = get_entry_at_xy_pos(x, y);
             if ((enemy_piece->type == KNIGHT) && enemy_piece->is_alive)
             {
                 return true;

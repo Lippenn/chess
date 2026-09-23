@@ -8,7 +8,6 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 add_executable(Chess
     src/main.c
     src/textures.c
-    src/board.c
     src/draw.c
     src/game.c
 )
