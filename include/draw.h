@@ -22,5 +22,7 @@ void draw_open_routes(void);
 void draw_selection(void);
 void draw_king_attacked(void);
 void draw_promotion_overlay(void);
+bool draw_button(Rectangle bounds, const char *text, int font_size);
+bool draw_image_button(Rectangle bounds, Texture2D texture);
 
 #endif

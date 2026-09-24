@@ -27,7 +27,7 @@ StarterPiece starter_pieces[MAX_PIECES] = {
 
     // White
     {PAWN, 'w', 0, 6},
-    {PAWN, 'w', 1, 6},
+    {PAWN, 'w', 1, 2},
     {PAWN, 'w', 2, 6},
     {PAWN, 'w', 3, 6},
     {PAWN, 'w', 4, 6},
@@ -79,7 +79,7 @@ int king_castle_directions[2][2] = {
 PieceMap map;
 PromotionPiece promotion_pieces[8];
 OpenRoutes open_routes = {0};
-GameState game_state = {1, 'w', NONE, false, -1, -1};
+GameState game_state = {1, 'w', NONE, false, false, false, -1, -1, NIL};
 PieceMapEntry *current_piece;
 
 void init_map()
@@ -91,9 +91,16 @@ void init_map()
         map.entries[i] = (PieceMapEntry){
             i, starter_piece.type, starter_piece.color, starter_piece.x, starter_piece.y,
             //  true,
-            i > 23 || i == 4 ? true : false,
+            i > 15 || i == 4 ? true : false,
             get_piece_texture(starter_piece.type, starter_piece.color), 0};
     }
+}
+
+void reset_game()
+{
+    game_state = (GameState){1, 'w', NONE, false, false, false, -1, -1, NIL};
+    init_map();
+    set_header_texture();
 }
 
 void init_promotion_pieces()
@@ -381,26 +388,30 @@ void calculate_king_route(PieceMapEntry *king)
 
 void calculate_piece_route(PieceMapEntry *piece)
 {
-    switch (piece->type)
+    open_routes.count = 0;
+    if (piece->is_alive)
     {
-    case PAWN:
-        calculate_pawn_route(piece);
-        break;
-    case KNIGHT:
-        calculate_knight_route(piece);
-        break;
-    case BISHOP:
-    case ROOK:
-        calculate_bishop_or_queen_or_rook_route(piece, false);
-        break;
-    case QUEEN:
-        calculate_bishop_or_queen_or_rook_route(piece, true);
-        break;
-    case KING:
-        calculate_king_route(piece);
-        break;
+        switch (piece->type)
+        {
+        case PAWN:
+            calculate_pawn_route(piece);
+            break;
+        case KNIGHT:
+            calculate_knight_route(piece);
+            break;
+        case BISHOP:
+        case ROOK:
+            calculate_bishop_or_queen_or_rook_route(piece, false);
+            break;
+        case QUEEN:
+            calculate_bishop_or_queen_or_rook_route(piece, true);
+            break;
+        case KING:
+            calculate_king_route(piece);
+            break;
+        }
+        current_piece = piece;
     }
-    current_piece = piece;
 }
 
 void capture_piece(XYPosition *pos)
@@ -455,6 +466,50 @@ bool is_king_in_check(char color)
     return calculate_square_attacked((XYPosition){king.x_pos, king.y_pos}, color);
 }
 
+bool has_available_move(char color)
+{
+    for (int i = 0; i < MAX_PIECES; i++)
+    {
+        if (map.entries[i].color == color)
+        {
+            calculate_piece_route(&map.entries[i]);
+            if (open_routes.count > 0)
+            {
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+void is_game_over()
+{
+    PieceMapEntry *kings[2] = {&map.entries[28], &map.entries[4]};
+    for (int i = 0; i < 2; i++)
+    {
+        if (!is_king_in_check(kings[i]->color))
+        {
+            continue;
+        }
+        calculate_king_route(kings[i]);
+        if (open_routes.count > 0)
+        {
+            continue;
+        }
+        if (has_available_move(kings[i]->color))
+        {
+            continue;
+        }
+        else
+        {
+            game_state.game_over = true;
+            game_state.winner = kings[i]->color == 'w' ? 'b' : 'w';
+            return;
+        }
+    }
+    return;
+}
+
 void move_piece(PieceMapEntry *piece, int x, int y)
 {
     XYPosition *open_route = is_xy_in_open_routes(x, y);
@@ -483,10 +538,9 @@ void move_piece(PieceMapEntry *piece, int x, int y)
         game_state.move += 1;
         game_state.color = game_state.color == 'w' ? 'b' : 'w';
         set_header_texture();
+        is_game_over();
     }
 }
-
-// TODO : CHECKMATE AND STALEMATE GOOD LUCK :) !!!
 
 void handle_board_click(int x, int y)
 {

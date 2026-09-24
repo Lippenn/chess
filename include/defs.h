@@ -21,6 +21,13 @@
 
 typedef enum
 {
+    PLAYER_WHITE,
+    PLAYER_BLACK,
+    NIL
+} PlayerEnum;
+
+typedef enum
+{
     FRIENDLY,
     ENEMY,
     EMPTY,
@@ -50,8 +57,11 @@ typedef struct
     char color;
     GameStateEnum status;
     bool promotion_active;
+    bool game_over;
+    bool stalemate;
     int promotion_x;
     int promotion_y;
+    PlayerEnum winner;
 } GameState;
 
 typedef struct

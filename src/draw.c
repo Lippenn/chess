@@ -4,6 +4,7 @@
 #include "game.h"
 #include <math.h>
 #include <stdio.h>
+#include <string.h>
 
 RenderTexture2D board_texture;
 RenderTexture2D header_texture;
@@ -73,10 +74,45 @@ void draw_promotion_overlay()
     Rectangle panel = {125, 275, 350, 150};
     DrawRectangle(0, 0, 600, HEADER_HEIGHT + 600, Fade(BLACK, 0.6f));
     DrawRectangleRec(panel, RAYWHITE);
-    DrawText("PROMOTE", 225, 290, 30, BLACK);
+    DrawText("PROMOTE", 225, 295, 30, BLACK);
+
     for (int i = offset; i < 4 + offset; i++)
     {
-        draw_screen_image(promotion_pieces[i].texture, 155 + (i - offset) * TILE_SIZE, 332);
+        Rectangle button = {155 + (i - offset) * TILE_SIZE, 335, 150, 40};
+        draw_image_button(button, promotion_pieces[i].texture);
+    }
+}
+
+void draw_game_over_overlay()
+{
+    if (game_state.winner)
+    {
+        Rectangle panel = {125, 275, 350, 150};
+        DrawRectangle(0, 0, 600, HEADER_HEIGHT + 600, Fade(BLACK, 0.6f));
+        DrawRectangleRec(panel, RAYWHITE);
+        char main_text[50] = " WINS";
+        char sub_text[50] = " by checkmate";
+
+        if (!game_state.stalemate)
+        {
+            memmove(main_text + strlen(game_state.winner == 'w' ? "WHITE" : "BLACK"), main_text,
+                    strlen(main_text) + 1);
+            memcpy(main_text, (game_state.winner == 'w' ? "WHITE" : "BLACK"),
+                   strlen(game_state.winner == 'w' ? "WHITE" : "BLACK"));
+        }
+
+        int main_text_width = MeasureText(main_text, 30);
+        int sub_text_width = MeasureText(sub_text, 20);
+
+        DrawText(main_text, BOARD_WIDTH / 2 - main_text_width / 2, 295, 30, BLACK);
+        DrawText(sub_text, BOARD_WIDTH / 2 - sub_text_width / 2, 330, 20, BLACK);
+
+        Rectangle reset_button = {225, 365, 150, 40};
+
+        if (draw_button(reset_button, "RESET", 20))
+        {
+            reset_game();
+        }
     }
 }
 
@@ -180,21 +216,53 @@ void draw_selection()
     }
 }
 
+bool draw_button(Rectangle bounds, const char *text, int font_size)
+{
+    Vector2 mouse = GetMousePosition();
+
+    bool hovered = CheckCollisionPointRec(mouse, bounds);
+    bool clicked = hovered && IsMouseButtonPressed(MOUSE_BUTTON_LEFT);
+
+    Color background = hovered ? GRAY : LIGHTGRAY;
+
+    DrawRectangleRec(bounds, background);
+    DrawRectangleLinesEx(bounds, 2, BLACK);
+
+    int text_width = MeasureText(text, font_size);
+
+    DrawText(text, bounds.x + (bounds.width - text_width) / 2,
+             bounds.y + (bounds.height - font_size) / 2, font_size, BLACK);
+
+    return clicked;
+}
+
+bool draw_image_button(Rectangle bounds, Texture2D texture)
+{
+    Vector2 mouse = GetMousePosition();
+
+    bool hovered = CheckCollisionPointRec(mouse, bounds);
+    bool clicked = hovered && IsMouseButtonPressed(MOUSE_BUTTON_LEFT);
+
+    Color background = hovered ? GRAY : LIGHTGRAY;
+
+    DrawRectangleRec(bounds, background);
+    DrawRectangleLinesEx(bounds, 2, BLACK);
+
+    // draw_screen_image(, int x, int y)
+
+    return clicked;
+}
+
 void draw_king_attacked()
 {
-    PieceMapEntry *white_king = &map.entries[28];
-    PieceMapEntry *black_king = &map.entries[4];
-
-    if (white_king != NULL &&
-        calculate_square_attacked((XYPosition){white_king->x_pos, white_king->y_pos},
-                                  white_king->color))
+    PieceMapEntry *kings[2] = {&map.entries[28], &map.entries[4]};
+    for (int i = 0; i < 2; i++)
     {
-        draw_king_danger(white_king->x_pos, white_king->y_pos);
-    }
-    if (black_king != NULL &&
-        calculate_square_attacked((XYPosition){black_king->x_pos, black_king->y_pos},
-                                  black_king->color))
-    {
-        draw_king_danger(black_king->x_pos, black_king->y_pos);
+        if (kings[i] != NULL &&
+            calculate_square_attacked((XYPosition){kings[i]->x_pos, kings[i]->y_pos},
+                                      kings[i]->color))
+        {
+            draw_king_danger(kings[i]->x_pos, kings[i]->y_pos);
+        }
     }
 }

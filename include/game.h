@@ -14,5 +14,7 @@ void init_promotion_pieces(void);
 void handle_click(float mouse_x, float mouse_y);
 bool is_king_in_check(char color);
 bool calculate_square_attacked(XYPosition pos, char color);
+void draw_game_over_overlay();
+void reset_game(void);
 
 #endif

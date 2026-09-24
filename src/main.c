@@ -38,7 +38,11 @@ void draw()
     {
         draw_open_routes();
     }
-    if (game_state.promotion_active)
+    if (game_state.game_over)
+    {
+        draw_game_over_overlay();
+    }
+    else if (game_state.promotion_active)
     {
         draw_promotion_overlay();
     }
