@@ -71,18 +71,34 @@ void draw_screen_image(Texture2D texture, int x, int y)
 void draw_promotion_overlay()
 {
     int offset = current_piece->color == 'w' ? 0 : 4;
+
     Rectangle panel = {125, 275, 350, 150};
+
     DrawRectangle(0, 0, 600, HEADER_HEIGHT + 600, Fade(BLACK, 0.6f));
     DrawRectangleRec(panel, RAYWHITE);
-    DrawText("PROMOTE", 225, 295, 30, BLACK);
+
+    const char *title = "PROMOTE";
+    int title_size = 30;
+    int title_width = MeasureText(title, title_size);
+
+    DrawText(title, panel.x + (panel.width - title_width) / 2, 295, title_size, BLACK);
+
+    float button_size = 75;
+    float spacing = 5;
+
+    float total_width = button_size * 4 + spacing * 3;
+    float start_x = panel.x + (panel.width - total_width) / 2;
 
     for (int i = offset; i < 4 + offset; i++)
     {
-        Rectangle button = {155 + (i - offset) * TILE_SIZE, 335, 150, 40};
+        int index = i - offset;
+
+        Rectangle button = {start_x + index * (button_size + spacing), 335, button_size,
+                            button_size};
+
         draw_image_button(button, promotion_pieces[i].texture);
     }
 }
-
 void draw_game_over_overlay()
 {
     if (game_state.winner)
@@ -248,7 +264,7 @@ bool draw_image_button(Rectangle bounds, Texture2D texture)
     DrawRectangleRec(bounds, background);
     DrawRectangleLinesEx(bounds, 2, BLACK);
 
-    // draw_screen_image(, int x, int y)
+    draw_screen_image(texture, bounds.x + 5, bounds.y + 5);
 
     return clicked;
 }
