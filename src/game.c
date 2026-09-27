@@ -27,7 +27,7 @@ StarterPiece starter_pieces[MAX_PIECES] = {
 
     // White
     {PAWN, 'w', 0, 6},
-    {PAWN, 'w', 1, 2},
+    {PAWN, 'w', 1, 6},
     {PAWN, 'w', 2, 6},
     {PAWN, 'w', 3, 6},
     {PAWN, 'w', 4, 6},
@@ -88,17 +88,27 @@ void init_map()
     for (int i = 0; i < MAX_PIECES; i++)
     {
         StarterPiece starter_piece = starter_pieces[i];
-        map.entries[i] = (PieceMapEntry){
-            i, starter_piece.type, starter_piece.color, starter_piece.x, starter_piece.y,
-            //  true,
-            i > 15 || i == 4 ? true : false,
-            get_piece_texture(starter_piece.type, starter_piece.color), 0};
+        int x = starter_piece.x;
+        int y = starter_piece.y;
+        if (game_state.flip)
+        {
+            x = 7 - x;
+            y = 7 - y;
+        }
+        map.entries[i] = (PieceMapEntry){i,
+                                         starter_piece.type,
+                                         starter_piece.color,
+                                         x,
+                                         y,
+                                         true,
+                                         get_piece_texture(starter_piece.type, starter_piece.color),
+                                         0};
     }
 }
 
 void reset_game()
 {
-    game_state = (GameState){1, 'w', NONE, false, false, false, -1, -1, NIL};
+    game_state = (GameState){1, 'w', NONE, false, false, false, true, -1, -1, NIL};
     init_map();
     set_header_texture();
 }
@@ -208,6 +218,9 @@ void add_available_route(int *count, XYPosition pos, PieceMapEntry *piece)
 void calculate_pawn_route(PieceMapEntry *pawn)
 {
     int direction = pawn->color == 'w' ? -1 : 1;
+
+    if (game_state.flip)
+        direction *= -1;
 
     int x = pawn->x_pos;
     int y = pawn->y_pos;
@@ -482,39 +495,38 @@ bool has_available_move(char color)
     return false;
 }
 
-void is_game_over()
+void set_game_status()
 {
-    PieceMapEntry *kings[2] = {&map.entries[28], &map.entries[4]};
+    char colors[2] = {'w', 'b'};
     for (int i = 0; i < 2; i++)
     {
-        if (!is_king_in_check(kings[i]->color))
+        bool in_check = is_king_in_check(colors[i]);
+        bool has_move = has_available_move(colors[i]);
+
+        if (has_move)
         {
             continue;
         }
-        calculate_king_route(kings[i]);
-        if (open_routes.count > 0)
+        if (in_check)
         {
-            continue;
-        }
-        if (has_available_move(kings[i]->color))
-        {
-            continue;
+            game_state.game_over = true;
+            game_state.winner = colors[i] == 'w' ? 'b' : 'w';
         }
         else
         {
             game_state.game_over = true;
-            game_state.winner = kings[i]->color == 'w' ? 'b' : 'w';
-            return;
+            game_state.stalemate = true;
         }
     }
-    return;
 }
 
 void move_piece(PieceMapEntry *piece, int x, int y)
 {
     XYPosition *open_route = is_xy_in_open_routes(x, y);
+    PieceMapEntry *save_piece = current_piece;
     if (!(open_route == NULL) && piece)
     {
+
         if (simulate_if_king_check(piece, (XYPosition){x, y}))
         {
             return;
@@ -538,7 +550,8 @@ void move_piece(PieceMapEntry *piece, int x, int y)
         game_state.move += 1;
         game_state.color = game_state.color == 'w' ? 'b' : 'w';
         set_header_texture();
-        is_game_over();
+        set_game_status();
+        current_piece = save_piece;
     }
 }
 
@@ -601,6 +614,18 @@ void handle_promotion_overlay_click(float mouse_x, float mouse_y)
         }
     }
 }
+void handle_footer_click()
+{
+    Rectangle flip_button = {20, 25, 100, 50};
+    Rectangle screen_button = {flip_button.x, flip_button.y + HEADER_HEIGHT + BOARD_HEIGHT,
+                               flip_button.width, flip_button.height};
+    if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) &&
+        CheckCollisionPointRec(GetMousePosition(), screen_button))
+    {
+        flip_board();
+    }
+}
+
 void handle_click(float mouse_x, float mouse_y)
 {
     if (mouse_y < HEADER_HEIGHT)
@@ -626,6 +651,7 @@ void handle_click(float mouse_x, float mouse_y)
     }
     else if (mouse_y < HEADER_HEIGHT + BOARD_HEIGHT + FOOTER_HEIGHT)
     {
+        handle_footer_click();
         return;
     }
 }
@@ -635,6 +661,9 @@ bool check_attacked_by_pawn(XYPosition pos, char color)
     int x = pos.x;
     int y = pos.y;
     int direction = color == 'w' ? -1 : 1;
+
+    if (game_state.flip)
+        direction *= -1;
 
     for (int i = 0; i < 2; i++)
     {
@@ -755,4 +784,15 @@ bool calculate_square_attacked(XYPosition pos, char color)
         return true;
     }
     return false;
+}
+
+void flip_board()
+{
+    game_state.flip = !game_state.flip;
+    for (int i = 0; i < MAX_PIECES; i++)
+    {
+        PieceMapEntry *piece = &map.entries[i];
+        piece->x_pos = 7 - piece->x_pos;
+        piece->y_pos = 7 - piece->y_pos;
+    }
 }

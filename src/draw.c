@@ -41,6 +41,8 @@ void set_footer_texture()
     BeginTextureMode(footer_texture);
     ClearBackground((Color){35, 35, 35, 255});
     DrawRectangle(0, 0, FOOTER_WIDTH, 3, (Color){207, 135, 65, 255});
+    Rectangle flip_button = {20, 25, 100, 50};
+    draw_button(flip_button, "FLIP", 20);
     EndTextureMode();
 }
 
@@ -101,34 +103,36 @@ void draw_promotion_overlay()
 }
 void draw_game_over_overlay()
 {
-    if (game_state.winner)
+    Rectangle panel = {125, 275, 350, 150};
+    DrawRectangle(0, 0, 600, HEADER_HEIGHT + 600, Fade(BLACK, 0.6f));
+    DrawRectangleRec(panel, RAYWHITE);
+    char main_text[20] = "WINS";
+    char sub_text[50] = "by checkmate";
+
+    if (!game_state.stalemate)
     {
-        Rectangle panel = {125, 275, 350, 150};
-        DrawRectangle(0, 0, 600, HEADER_HEIGHT + 600, Fade(BLACK, 0.6f));
-        DrawRectangleRec(panel, RAYWHITE);
-        char main_text[50] = " WINS";
-        char sub_text[50] = " by checkmate";
+        memmove(main_text + strlen(game_state.winner == 'w' ? "WHITE " : "BLACK "), main_text,
+                strlen(main_text) + 1);
+        memcpy(main_text, (game_state.winner == 'w' ? "WHITE " : "BLACK "),
+               strlen(game_state.winner == 'w' ? "WHITE " : "BLACK "));
+    }
+    else
+    {
+        memcpy(main_text, "DRAW", strlen("DRAW"));
+        memcpy(sub_text + 3, "stale", strlen("stale"));
+    }
 
-        if (!game_state.stalemate)
-        {
-            memmove(main_text + strlen(game_state.winner == 'w' ? "WHITE" : "BLACK"), main_text,
-                    strlen(main_text) + 1);
-            memcpy(main_text, (game_state.winner == 'w' ? "WHITE" : "BLACK"),
-                   strlen(game_state.winner == 'w' ? "WHITE" : "BLACK"));
-        }
+    int main_text_width = MeasureText(main_text, 30);
+    int sub_text_width = MeasureText(sub_text, 20);
 
-        int main_text_width = MeasureText(main_text, 30);
-        int sub_text_width = MeasureText(sub_text, 20);
+    DrawText(main_text, BOARD_WIDTH / 2 - main_text_width / 2, 295, 30, BLACK);
+    DrawText(sub_text, BOARD_WIDTH / 2 - sub_text_width / 2, 330, 20, BLACK);
 
-        DrawText(main_text, BOARD_WIDTH / 2 - main_text_width / 2, 295, 30, BLACK);
-        DrawText(sub_text, BOARD_WIDTH / 2 - sub_text_width / 2, 330, 20, BLACK);
+    Rectangle reset_button = {225, 365, 150, 40};
 
-        Rectangle reset_button = {225, 365, 150, 40};
-
-        if (draw_button(reset_button, "RESET", 20))
-        {
-            reset_game();
-        }
+    if (draw_button(reset_button, "RESET", 20))
+    {
+        reset_game();
     }
 }
 

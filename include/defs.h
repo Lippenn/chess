@@ -59,6 +59,7 @@ typedef struct
     bool promotion_active;
     bool game_over;
     bool stalemate;
+    bool flip;
     int promotion_x;
     int promotion_y;
     PlayerEnum winner;
