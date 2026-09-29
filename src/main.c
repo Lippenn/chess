@@ -32,6 +32,7 @@ void draw()
     DrawTextureRec(footer_texture.texture, (Rectangle){0, 0, HEADER_WIDTH, -HEADER_HEIGHT},
                    (Vector2){0, HEADER_HEIGHT + BOARD_HEIGHT}, WHITE);
     draw_selection();
+    draw_flip_button();
     draw_king_attacked();
     draw_pieces();
     if (game_state.status == SELECTING)

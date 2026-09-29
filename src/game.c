@@ -7,43 +7,46 @@
 
 StarterPiece starter_pieces[MAX_PIECES] = {
     // Black
-    {ROOK, 'b', 0, 0},
-    {KNIGHT, 'b', 1, 0},
-    {BISHOP, 'b', 2, 0},
-    {QUEEN, 'b', 3, 0},
-    {KING, 'b', 4, 0},
-    {BISHOP, 'b', 5, 0},
-    {KNIGHT, 'b', 6, 0},
-    {ROOK, 'b', 7, 0},
+    {ROOK, 'b', 0, 0, true},
+    {KNIGHT, 'b', 1, 0, false},
+    {BISHOP, 'b', 2, 0, false},
+    {QUEEN, 'b', 3, 0, false},
+    {KING, 'b', 4, 0, true},
+    {BISHOP, 'b', 5, 0, false},
+    {KNIGHT, 'b', 6, 0, false},
+    {ROOK, 'b', 7, 0, true},
 
-    {PAWN, 'b', 0, 1},
-    {PAWN, 'b', 1, 1},
-    {PAWN, 'b', 2, 1},
-    {PAWN, 'b', 3, 1},
-    {PAWN, 'b', 4, 1},
-    {PAWN, 'b', 5, 1},
-    {PAWN, 'b', 6, 1},
-    {PAWN, 'b', 7, 1},
+    {PAWN, 'b', 0, 1, true},
+    {PAWN, 'b', 1, 1, true},
+    {PAWN, 'b', 2, 1, true},
+    {PAWN, 'b', 3, 1, true},
+    {PAWN, 'b', 4, 1, true},
+    {PAWN, 'b', 5, 1, true},
+    {PAWN, 'b', 6, 1, true},
+    {PAWN, 'b', 7, 1, true},
 
     // White
-    {PAWN, 'w', 0, 6},
-    {PAWN, 'w', 1, 6},
-    {PAWN, 'w', 2, 6},
-    {PAWN, 'w', 3, 6},
-    {PAWN, 'w', 4, 6},
-    {PAWN, 'w', 5, 6},
-    {PAWN, 'w', 6, 6},
-    {PAWN, 'w', 7, 6},
+    {PAWN, 'w', 0, 6, true},
+    {PAWN, 'w', 1, 6, true},
+    {PAWN, 'w', 2, 6, true},
+    {PAWN, 'w', 3, 6, true},
+    {PAWN, 'w', 4, 6, true},
+    {PAWN, 'w', 5, 6, true},
+    {PAWN, 'w', 6, 6, true},
+    {PAWN, 'w', 7, 6, true},
 
-    {ROOK, 'w', 0, 7},
-    {KNIGHT, 'w', 1, 7},
-    {BISHOP, 'w', 2, 7},
-    {QUEEN, 'w', 3, 7},
-    {KING, 'w', 4, 7},
-    {BISHOP, 'w', 5, 7},
-    {KNIGHT, 'w', 6, 7},
-    {ROOK, 'w', 7, 7},
+    {ROOK, 'w', 0, 7, true},
+    {KNIGHT, 'w', 1, 7, true},
+    {BISHOP, 'w', 2, 7, true},
+    {QUEEN, 'w', 3, 7, true},
+    {KING, 'w', 4, 7, true},
+    {BISHOP, 'w', 5, 7, true},
+    {KNIGHT, 'w', 6, 7, true},
+    {ROOK, 'w', 7, 7, true},
 };
+
+PieceValueMapEntry piece_values[6] = {{PAWN, 100}, {KNIGHT, 300}, {BISHOP, 300},
+                                      {ROOK, 500}, {QUEEN, 900},  {KING, 2000}};
 
 int pawn_directions[2] = {-1, 1};
 int knight_directions[8][2] = {
@@ -95,14 +98,10 @@ void init_map()
             x = 7 - x;
             y = 7 - y;
         }
-        map.entries[i] = (PieceMapEntry){i,
-                                         starter_piece.type,
-                                         starter_piece.color,
-                                         x,
-                                         y,
-                                         true,
-                                         get_piece_texture(starter_piece.type, starter_piece.color),
-                                         0};
+        map.entries[i] = (PieceMapEntry){
+            i, starter_piece.type, starter_piece.color, x, y,
+            //  true,
+            starter_piece.is_alive, get_piece_texture(starter_piece.type, starter_piece.color), 0};
     }
 }
 
@@ -351,7 +350,6 @@ void calculate_king_route(PieceMapEntry *king)
         for (int i = 0; i < 2; i++)
         {
             int direction = king_castle_directions[i][0] > 0 ? 1 : -1;
-
             int rook_x = direction > 0 ? 7 : 0;
 
             PieceMapEntry *rook = get_entry_at_xy_pos(rook_x, king->y_pos);
@@ -363,7 +361,6 @@ void calculate_king_route(PieceMapEntry *king)
             }
 
             int middle_x = king->x_pos + direction;
-
             int destination_x = king->x_pos + direction * 2;
 
             if (get_square_status_at_xy_pos(middle_x, king->y_pos, king->color) != EMPTY)
@@ -377,8 +374,7 @@ void calculate_king_route(PieceMapEntry *king)
             }
             if (direction < 0)
             {
-                int rook_path_x = king->x_pos - 3;
-
+                int rook_path_x = king->x_pos - (game_state.flip ? 2 : 3);
                 if (get_square_status_at_xy_pos(rook_path_x, king->y_pos, king->color) != EMPTY)
                 {
                     continue;
@@ -388,7 +384,6 @@ void calculate_king_route(PieceMapEntry *king)
             {
                 continue;
             }
-
             if (calculate_square_attacked((XYPosition){destination_x, king->y_pos}, king->color))
             {
                 continue;
@@ -614,18 +609,6 @@ void handle_promotion_overlay_click(float mouse_x, float mouse_y)
         }
     }
 }
-void handle_footer_click()
-{
-    Rectangle flip_button = {20, 25, 100, 50};
-    Rectangle screen_button = {flip_button.x, flip_button.y + HEADER_HEIGHT + BOARD_HEIGHT,
-                               flip_button.width, flip_button.height};
-    if (IsMouseButtonPressed(MOUSE_LEFT_BUTTON) &&
-        CheckCollisionPointRec(GetMousePosition(), screen_button))
-    {
-        flip_board();
-    }
-}
-
 void handle_click(float mouse_x, float mouse_y)
 {
     if (mouse_y < HEADER_HEIGHT)
@@ -651,7 +634,6 @@ void handle_click(float mouse_x, float mouse_y)
     }
     else if (mouse_y < HEADER_HEIGHT + BOARD_HEIGHT + FOOTER_HEIGHT)
     {
-        handle_footer_click();
         return;
     }
 }

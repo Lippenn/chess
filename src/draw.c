@@ -41,9 +41,17 @@ void set_footer_texture()
     BeginTextureMode(footer_texture);
     ClearBackground((Color){35, 35, 35, 255});
     DrawRectangle(0, 0, FOOTER_WIDTH, 3, (Color){207, 135, 65, 255});
-    Rectangle flip_button = {20, 25, 100, 50};
-    draw_button(flip_button, "FLIP", 20);
     EndTextureMode();
+}
+
+void draw_flip_button()
+{
+    Rectangle flip_button = {20, HEADER_HEIGHT + BOARD_HEIGHT + 25, 100, 50};
+
+    if (draw_button(flip_button, "FLIP", 20))
+    {
+        flip_board();
+    }
 }
 
 void set_board_texture()

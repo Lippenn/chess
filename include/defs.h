@@ -71,6 +71,7 @@ typedef struct
     char color;
     int x;
     int y;
+    bool is_alive;
 } StarterPiece;
 
 extern StarterPiece starter_pieces[MAX_PIECES];
@@ -92,6 +93,12 @@ typedef struct
     PieceMapEntry entries[MAX_PIECES];
     int count;
 } PieceMap;
+
+typedef struct
+{
+    PieceTypeEnum type;
+    int value;
+} PieceValueMapEntry;
 
 typedef struct
 {

@@ -12,6 +12,7 @@ extern Rectangle board;
 void set_header_texture(void);
 void set_footer_texture(void);
 void set_board_texture(void);
+void draw_flip_button(void);
 void draw_pieces(void);
 Texture2D get_piece_texture(PieceTypeEnum type, char color);
 void draw_piece_selection(int x, int y);
