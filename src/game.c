@@ -8,12 +8,12 @@
 StarterPiece starter_pieces[MAX_PIECES] = {
     // Black
     {ROOK, 'b', 0, 0, true},
-    {KNIGHT, 'b', 1, 0, false},
-    {BISHOP, 'b', 2, 0, false},
-    {QUEEN, 'b', 3, 0, false},
+    {KNIGHT, 'b', 1, 0, true},
+    {BISHOP, 'b', 2, 0, true},
+    {QUEEN, 'b', 3, 0, true},
     {KING, 'b', 4, 0, true},
-    {BISHOP, 'b', 5, 0, false},
-    {KNIGHT, 'b', 6, 0, false},
+    {BISHOP, 'b', 5, 0, true},
+    {KNIGHT, 'b', 6, 0, true},
     {ROOK, 'b', 7, 0, true},
 
     {PAWN, 'b', 0, 1, true},
@@ -749,7 +749,24 @@ bool check_attacked_by_knight(XYPosition pos, char color)
     return false;
 }
 
-// bool check_attacked_by_king(PieceMapEntry *piece) { return false; } SEE HOW
+bool check_attacked_by_king(XYPosition pos, char color)
+{
+    for (int i = 0; i < 8; i++)
+    {
+        int x = pos.x + king_directions[i][0];
+        int y = pos.y + king_directions[i][1];
+        SquareStatusEnum status = get_square_status_at_xy_pos(x, y, color);
+        if (status == ENEMY)
+        {
+            PieceMapEntry *enemy_piece = get_entry_at_xy_pos(x, y);
+            if ((enemy_piece->type == KING) && enemy_piece->is_alive)
+            {
+                return true;
+            }
+        }
+    }
+    return false;
+}
 
 bool calculate_square_attacked(XYPosition pos, char color)
 {
@@ -762,6 +779,10 @@ bool calculate_square_attacked(XYPosition pos, char color)
         return true;
     }
     if (check_attacked_by_knight(pos, color))
+    {
+        return true;
+    }
+    if (check_attacked_by_king(pos, color))
     {
         return true;
     }
