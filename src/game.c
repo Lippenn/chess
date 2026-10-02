@@ -1,5 +1,6 @@
 #include "../include/game.h"
 #include "./draw.h"
+#include "textures.h"
 #include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -7,10 +8,10 @@
 
 StarterPiece starter_pieces[MAX_PIECES] = {
     // Black
-    {ROOK, 'b', 0, 0, true},
-    {KNIGHT, 'b', 1, 0, true},
-    {BISHOP, 'b', 2, 0, true},
-    {QUEEN, 'b', 3, 0, true},
+    {ROOK, 'b', 0, 0, false},
+    {KNIGHT, 'b', 1, 0, false},
+    {BISHOP, 'b', 2, 0, false},
+    {QUEEN, 'b', 3, 0, false},
     {KING, 'b', 4, 0, true},
     {BISHOP, 'b', 5, 0, true},
     {KNIGHT, 'b', 6, 0, true},
@@ -18,12 +19,12 @@ StarterPiece starter_pieces[MAX_PIECES] = {
 
     {PAWN, 'b', 0, 1, true},
     {PAWN, 'b', 1, 1, true},
-    {PAWN, 'b', 2, 1, true},
-    {PAWN, 'b', 3, 1, true},
-    {PAWN, 'b', 4, 1, true},
-    {PAWN, 'b', 5, 1, true},
-    {PAWN, 'b', 6, 1, true},
-    {PAWN, 'b', 7, 1, true},
+    {PAWN, 'b', 2, 1, false},
+    {PAWN, 'b', 3, 1, false},
+    {PAWN, 'b', 4, 1, false},
+    {PAWN, 'b', 5, 1, false},
+    {PAWN, 'b', 6, 1, false},
+    {PAWN, 'b', 7, 1, false},
 
     // White
     {PAWN, 'w', 0, 6, true},
@@ -36,9 +37,9 @@ StarterPiece starter_pieces[MAX_PIECES] = {
     {PAWN, 'w', 7, 6, true},
 
     {ROOK, 'w', 0, 7, true},
-    {KNIGHT, 'w', 1, 7, true},
-    {BISHOP, 'w', 2, 7, true},
-    {QUEEN, 'w', 3, 7, true},
+    {KNIGHT, 'w', 1, 7, false},
+    {BISHOP, 'w', 2, 7, false},
+    {QUEEN, 'w', 3, 7, false},
     {KING, 'w', 4, 7, true},
     {BISHOP, 'w', 5, 7, true},
     {KNIGHT, 'w', 6, 7, true},
@@ -82,8 +83,9 @@ int king_castle_directions[2][2] = {
 PieceMap map;
 PromotionPiece promotion_pieces[8];
 OpenRoutes open_routes = {0};
-GameState game_state = {1, 'w', NONE, false, false, false, -1, -1, NIL};
+GameState game_state = {1, 'w', NONE, false, false, false, false, -1, -1, NIL};
 PieceMapEntry *current_piece;
+MoveHistory move_history = {-1};
 
 void init_map()
 {
@@ -98,10 +100,15 @@ void init_map()
             x = 7 - x;
             y = 7 - y;
         }
-        map.entries[i] = (PieceMapEntry){
-            i, starter_piece.type, starter_piece.color, x, y,
-            //  true,
-            starter_piece.is_alive, get_piece_texture(starter_piece.type, starter_piece.color), 0};
+        map.entries[i] = (PieceMapEntry){i,
+                                         starter_piece.type,
+                                         starter_piece.color,
+                                         x,
+                                         y,
+                                         starter_piece.is_alive,
+                                         get_piece_texture(starter_piece.type, starter_piece.color),
+                                         0,
+                                         -1};
     }
 }
 
@@ -141,6 +148,18 @@ PieceMapEntry *get_entry_at_xy_pos(int x, int y)
     for (int i = 0; i < MAX_PIECES; i++)
     {
         if (map.entries[i].x_pos == x && map.entries[i].y_pos == y && map.entries[i].is_alive)
+        {
+            return &map.entries[i];
+        }
+    }
+    return NULL;
+}
+
+PieceMapEntry *get_entry_by_index(int index)
+{
+    for (int i = 0; i < MAX_PIECES; i++)
+    {
+        if (map.entries[i].index == index)
         {
             return &map.entries[i];
         }
@@ -253,7 +272,8 @@ void calculate_pawn_route(PieceMapEntry *pawn)
             if (status == ENEMY)
             {
                 PieceMapEntry *enemy_piece = get_entry_at_xy_pos(x, pawn->y_pos);
-                if (enemy_piece && enemy_piece->type == PAWN && enemy_piece->move_count == 1)
+                if (enemy_piece && enemy_piece->type == PAWN && enemy_piece->move_count == 1 &&
+                    enemy_piece->double_move_at == game_state.move - 1)
                 {
                     add_available_route(&count, (XYPosition){x, pawn->y_pos + direction, true},
                                         pawn);
@@ -422,16 +442,18 @@ void calculate_piece_route(PieceMapEntry *piece)
     }
 }
 
-void capture_piece(XYPosition *pos)
+PieceMapEntry *capture_piece(XYPosition *pos)
 {
     PieceMapEntry *piece = get_entry_at_xy_pos(pos->x, pos->y);
     if (piece)
     {
         piece->is_alive = false;
+        return piece;
     }
+    return NULL;
 }
 
-void check_castle_king(PieceMapEntry *king, int x, int y)
+void check_castle_king(PieceMapEntry *king, int x, int y, Move *move)
 {
     int difference = abs(x - king->x_pos);
     int direction = x > king->x_pos ? -1 : 1;
@@ -439,32 +461,50 @@ void check_castle_king(PieceMapEntry *king, int x, int y)
     if (difference > 1)
     {
         PieceMapEntry *rook = get_entry_at_xy_pos(x > 4 ? 7 : 0, y);
+        move->sub_x = rook->x_pos;
+        move->sub_y = rook->y_pos;
+        move->capture_index = rook->index;
         if (rook && rook->is_alive && rook->type == ROOK)
         {
             rook->x_pos = x + direction;
         }
+        move->is_castle = true;
     }
 }
 
-void check_en_passant(PieceMapEntry *pawn, int x, int y)
+void check_en_passant(PieceMapEntry *pawn, int x, int y, Move *move)
 {
     if ((x - pawn->x_pos) != 0)
     {
         PieceMapEntry *piece = get_entry_at_xy_pos(x, pawn->y_pos);
+        move->sub_x = piece->x_pos;
+        move->sub_y = piece->y_pos;
+        move->capture_index = piece->index;
         if (piece && piece->type == PAWN)
         {
             piece->is_alive = false;
         }
+        move->is_castle = true;
     }
 }
 
-void check_pawn_promotion(PieceMapEntry *pawn, int x, int y)
+void check_double_advance(PieceMapEntry *pawn, int x, int y)
+{
+    int difference = abs(pawn->y_pos - y);
+    if (difference > 1)
+    {
+        pawn->double_move_at = game_state.move;
+    }
+}
+
+void check_pawn_promotion(PieceMapEntry *pawn, int x, int y, Move *move)
 {
     if (y == 0 || y == 7)
     {
         game_state.promotion_active = true;
         game_state.promotion_x = x;
         game_state.promotion_y = y;
+        move->is_promotion = true;
     }
 }
 
@@ -515,37 +555,73 @@ void set_game_status()
     }
 }
 
+void add_to_move_history(Move move)
+{
+    move_history.count += 1;
+    move_history.moves[move_history.count] = move;
+}
+
+void next_move()
+{
+    game_state.move += 1;
+    game_state.color = game_state.color == 'w' ? 'b' : 'w';
+    set_header_texture();
+    set_game_status();
+}
+
+void previous_move()
+{
+    game_state.move -= 1;
+    game_state.color = game_state.color == 'w' ? 'b' : 'w';
+    set_header_texture();
+    set_game_status();
+}
+
 void move_piece(PieceMapEntry *piece, int x, int y)
 {
     XYPosition *open_route = is_xy_in_open_routes(x, y);
     PieceMapEntry *save_piece = current_piece;
     if (!(open_route == NULL) && piece)
     {
-
+        PieceMapEntry *captured_piece = NULL;
+        Move move = {piece->index,
+                     captured_piece != NULL ? captured_piece->index : -1,
+                     piece->x_pos,
+                     piece->y_pos,
+                     x,
+                     y,
+                     -1,
+                     -1,
+                     false,
+                     false};
         if (simulate_if_king_check(piece, (XYPosition){x, y}))
         {
             return;
         }
         if (piece->type == KING)
         {
-            check_castle_king(piece, x, y);
+            check_castle_king(piece, x, y, &move);
         }
+
         if (open_route->is_enemy)
         {
-            capture_piece(open_route);
+            captured_piece = capture_piece(open_route);
         }
         if (piece->type == PAWN)
         {
-            check_pawn_promotion(piece, x, y);
-            check_en_passant(piece, x, y);
+            check_pawn_promotion(piece, x, y, &move);
+            check_en_passant(piece, x, y, &move);
+            check_double_advance(piece, x, y);
         }
+        if (piece)
+        {
+            add_to_move_history(move);
+        }
+
         piece->x_pos = x;
         piece->y_pos = y;
         piece->move_count += 1;
-        game_state.move += 1;
-        game_state.color = game_state.color == 'w' ? 'b' : 'w';
-        set_header_texture();
-        set_game_status();
+        next_move();
         current_piece = save_piece;
     }
 }
@@ -797,5 +873,40 @@ void flip_board()
         PieceMapEntry *piece = &map.entries[i];
         piece->x_pos = 7 - piece->x_pos;
         piece->y_pos = 7 - piece->y_pos;
+    }
+}
+
+void undo_move()
+{
+    if (move_history.count > 0)
+    {
+        Move *latest_move = &move_history.moves[move_history.count];
+        PieceMapEntry *piece = get_entry_by_index(latest_move->index);
+        if (latest_move->capture_index >= 0)
+        {
+            PieceMapEntry *captured_piece = get_entry_by_index(latest_move->capture_index);
+            captured_piece->is_alive = true;
+        }
+        piece->x_pos = latest_move->from_x;
+        piece->y_pos = latest_move->from_y;
+        piece->move_count -= 1;
+
+        if (latest_move->is_castle)
+        {
+            PieceMapEntry *rook = get_entry_by_index(latest_move->capture_index);
+            if (latest_move->sub_x > -1 && latest_move->sub_y > -1)
+            {
+                rook->x_pos = latest_move->sub_x;
+                rook->y_pos = latest_move->sub_y;
+            }
+        }
+        if (latest_move->is_promotion)
+        {
+            piece->type = PAWN;
+            piece->texture = piece->color ? white_pawn : black_pawn;
+        }
+        latest_move = NULL;
+        move_history.count -= 1;
+        previous_move();
     }
 }

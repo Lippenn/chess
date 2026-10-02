@@ -18,6 +18,27 @@
 
 #define MAX_PIECES 32
 #define MAX_MOVES 32
+#define MAX_POSITION_MOVES 1024
+
+typedef struct
+{
+    int index;
+    int capture_index;
+    int from_x;
+    int from_y;
+    int to_x;
+    int to_y;
+    int sub_x;
+    int sub_y;
+    bool is_promotion;
+    bool is_castle;
+} Move;
+
+typedef struct
+{
+    Move moves[MAX_POSITION_MOVES];
+    int count;
+} MoveHistory;
 
 typedef enum
 {
@@ -86,6 +107,7 @@ typedef struct
     bool is_alive;
     Texture2D texture;
     int move_count;
+    int double_move_at;
 } PieceMapEntry;
 
 typedef struct
@@ -99,6 +121,12 @@ typedef struct
     PieceTypeEnum type;
     int value;
 } PieceValueMapEntry;
+
+typedef struct
+{
+    int value;
+    PieceTypeEnum type;
+} PieceMapValue;
 
 typedef struct
 {

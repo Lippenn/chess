@@ -54,6 +54,16 @@ void draw_flip_button()
     }
 }
 
+void draw_undo_button()
+{
+    Rectangle flip_button = {140, HEADER_HEIGHT + BOARD_HEIGHT + 25, 100, 50};
+
+    if (draw_button(flip_button, "UNDO", 20))
+    {
+        undo_move();
+    }
+}
+
 void set_board_texture()
 {
     BeginTextureMode(board_texture);

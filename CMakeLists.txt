@@ -10,6 +10,7 @@ add_executable(Chess
     src/textures.c
     src/draw.c
     src/game.c
+    src/engine.c
 )
 
 target_include_directories(Chess PRIVATE

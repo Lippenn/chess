@@ -33,6 +33,7 @@ void draw()
                    (Vector2){0, HEADER_HEIGHT + BOARD_HEIGHT}, WHITE);
     draw_selection();
     draw_flip_button();
+    draw_undo_button();
     draw_king_attacked();
     draw_pieces();
     if (game_state.status == SELECTING)
