@@ -20,6 +20,8 @@
 #define MAX_MOVES 32
 #define MAX_POSITION_MOVES 1024
 
+#define INF 10000000
+
 typedef struct
 {
     int index;

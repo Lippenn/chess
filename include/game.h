@@ -21,5 +21,6 @@ void reset_game(void);
 void flip_board(void);
 void undo_move(void);
 void move_piece(PieceMapEntry *piece, int x, int y);
+PieceMapEntry *get_entry_at_xy_pos(int x, int y);
 
 #endif

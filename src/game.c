@@ -8,10 +8,10 @@
 
 StarterPiece starter_pieces[MAX_PIECES] = {
     // Black
-    {ROOK, 'b', 0, 0, false},
-    {KNIGHT, 'b', 1, 0, false},
-    {BISHOP, 'b', 2, 0, false},
-    {QUEEN, 'b', 3, 0, false},
+    {ROOK, 'b', 0, 0, true},
+    {KNIGHT, 'b', 1, 0, true},
+    {BISHOP, 'b', 2, 0, true},
+    {QUEEN, 'b', 3, 0, true},
     {KING, 'b', 4, 0, true},
     {BISHOP, 'b', 5, 0, true},
     {KNIGHT, 'b', 6, 0, true},
@@ -19,12 +19,12 @@ StarterPiece starter_pieces[MAX_PIECES] = {
 
     {PAWN, 'b', 0, 1, true},
     {PAWN, 'b', 1, 1, true},
-    {PAWN, 'b', 2, 1, false},
-    {PAWN, 'b', 3, 1, false},
-    {PAWN, 'b', 4, 1, false},
-    {PAWN, 'b', 5, 1, false},
-    {PAWN, 'b', 6, 1, false},
-    {PAWN, 'b', 7, 1, false},
+    {PAWN, 'b', 2, 1, true},
+    {PAWN, 'b', 3, 1, true},
+    {PAWN, 'b', 4, 1, true},
+    {PAWN, 'b', 5, 1, true},
+    {PAWN, 'b', 6, 1, true},
+    {PAWN, 'b', 7, 1, true},
 
     // White
     {PAWN, 'w', 0, 6, true},
@@ -37,9 +37,9 @@ StarterPiece starter_pieces[MAX_PIECES] = {
     {PAWN, 'w', 7, 6, true},
 
     {ROOK, 'w', 0, 7, true},
-    {KNIGHT, 'w', 1, 7, false},
-    {BISHOP, 'w', 2, 7, false},
-    {QUEEN, 'w', 3, 7, false},
+    {KNIGHT, 'w', 1, 7, true},
+    {BISHOP, 'w', 2, 7, true},
+    {QUEEN, 'w', 3, 7, true},
     {KING, 'w', 4, 7, true},
     {BISHOP, 'w', 5, 7, true},
     {KNIGHT, 'w', 6, 7, true},
@@ -477,11 +477,11 @@ void check_en_passant(PieceMapEntry *pawn, int x, int y, Move *move)
     if ((x - pawn->x_pos) != 0)
     {
         PieceMapEntry *piece = get_entry_at_xy_pos(x, pawn->y_pos);
-        move->sub_x = piece->x_pos;
-        move->sub_y = piece->y_pos;
-        move->capture_index = piece->index;
         if (piece && piece->type == PAWN)
         {
+            move->sub_x = piece->x_pos;
+            move->sub_y = piece->y_pos;
+            move->capture_index = piece->index;
             piece->is_alive = false;
         }
         move->is_castle = true;
@@ -613,11 +613,7 @@ void move_piece(PieceMapEntry *piece, int x, int y)
             check_en_passant(piece, x, y, &move);
             check_double_advance(piece, x, y);
         }
-        if (piece)
-        {
-            add_to_move_history(move);
-        }
-
+        add_to_move_history(move);
         piece->x_pos = x;
         piece->y_pos = y;
         piece->move_count += 1;
