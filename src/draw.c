@@ -3,19 +3,12 @@
 #include "./textures.h"
 #include "game.h"
 #include <math.h>
-#include <stdio.h>
-#include <string.h>
 
 RenderTexture2D board_texture;
 RenderTexture2D header_texture;
 RenderTexture2D footer_texture;
 
 Rectangle board = {0, 100, BOARD_WIDTH, BOARD_HEIGHT};
-
-extern PieceMap map;
-extern GameState game_state;
-extern OpenRoutes open_routes;
-extern PieceMapEntry *current_piece;
 
 void set_header_texture()
 {
@@ -26,12 +19,12 @@ void set_header_texture()
     DrawText("CHESS", 25, 18, 32, RAYWHITE);
     DrawText("Classic Chess", 25, 55, 20, (Color){160, 160, 160, 255});
 
-    char turn_text[32];
-    snprintf(turn_text, sizeof(turn_text), "TURN %d", (game_state.move + 1) / 2);
+    // char turn_text[32];
+    // snprintf(turn_text, sizeof(turn_text), "TURN %d", (game_state.move + 1) / 2);
 
-    DrawText(turn_text, 320, 24, 18, (Color){180, 180, 180, 255});
-    const char *turn_text_color = game_state.color == 'w' ? "WHITE TO MOVE" : "BLACK TO MOVE";
-    DrawText(turn_text_color, 320, 50, 20, RAYWHITE);
+    // DrawText(turn_text, 320, 24, 18, (Color){180, 180, 180, 255});
+    // const char *turn_text_color = game_state.color == 'w' ? "WHITE TO MOVE" : "BLACK TO MOVE";
+    // DrawText(turn_text_color, 320, 50, 20, RAYWHITE);
 
     EndTextureMode();
 }
@@ -50,7 +43,6 @@ void draw_flip_button()
 
     if (draw_button(flip_button, "FLIP", 20))
     {
-        flip_board();
     }
 }
 
@@ -60,7 +52,6 @@ void draw_undo_button()
 
     if (draw_button(flip_button, "UNDO", 20))
     {
-        undo_move();
     }
 }
 
@@ -90,68 +81,67 @@ void draw_screen_image(Texture2D texture, int x, int y)
 
 void draw_promotion_overlay()
 {
-    int offset = current_piece->color == 'w' ? 0 : 4;
+    // int offset = current_piece->color == 'w' ? 0 : 4;
 
-    Rectangle panel = {125, 275, 350, 150};
+    // Rectangle panel = {125, 275, 350, 150};
 
-    DrawRectangle(0, 0, 600, HEADER_HEIGHT + 600, Fade(BLACK, 0.6f));
-    DrawRectangleRec(panel, RAYWHITE);
+    // DrawRectangle(0, 0, 600, HEADER_HEIGHT + 600, Fade(BLACK, 0.6f));
+    // DrawRectangleRec(panel, RAYWHITE);
 
-    const char *title = "PROMOTE";
-    int title_size = 30;
-    int title_width = MeasureText(title, title_size);
+    // const char *title = "PROMOTE";
+    // int title_size = 30;
+    // int title_width = MeasureText(title, title_size);
 
-    DrawText(title, panel.x + (panel.width - title_width) / 2, 295, title_size, BLACK);
+    // DrawText(title, panel.x + (panel.width - title_width) / 2, 295, title_size, BLACK);
 
-    float button_size = 75;
-    float spacing = 5;
+    // float button_size = 75;
+    // float spacing = 5;
 
-    float total_width = button_size * 4 + spacing * 3;
-    float start_x = panel.x + (panel.width - total_width) / 2;
+    // float total_width = button_size * 4 + spacing * 3;
+    // float start_x = panel.x + (panel.width - total_width) / 2;
 
-    for (int i = offset; i < 4 + offset; i++)
-    {
-        int index = i - offset;
+    // for (int i = offset; i < 4 + offset; i++)
+    // {
+    //     int index = i - offset;
 
-        Rectangle button = {start_x + index * (button_size + spacing), 335, button_size,
-                            button_size};
+    //     Rectangle button = {start_x + index * (button_size + spacing), 335, button_size,
+    //                         button_size};
 
-        draw_image_button(button, promotion_pieces[i].texture);
-    }
+    //     draw_image_button(button, promotion_pieces[i].texture);
+    // }
 }
 void draw_game_over_overlay()
 {
-    Rectangle panel = {125, 275, 350, 150};
-    DrawRectangle(0, 0, 600, HEADER_HEIGHT + 600, Fade(BLACK, 0.6f));
-    DrawRectangleRec(panel, RAYWHITE);
-    char main_text[20] = "WINS";
-    char sub_text[50] = "by checkmate";
+    // Rectangle panel = {125, 275, 350, 150};
+    // DrawRectangle(0, 0, 600, HEADER_HEIGHT + 600, Fade(BLACK, 0.6f));
+    // DrawRectangleRec(panel, RAYWHITE);
+    // char main_text[20] = "WINS";
+    // char sub_text[50] = "by checkmate";
 
-    if (!game_state.stalemate)
-    {
-        memmove(main_text + strlen(game_state.winner == 'w' ? "WHITE " : "BLACK "), main_text,
-                strlen(main_text) + 1);
-        memcpy(main_text, (game_state.winner == 'w' ? "WHITE " : "BLACK "),
-               strlen(game_state.winner == 'w' ? "WHITE " : "BLACK "));
-    }
-    else
-    {
-        memcpy(main_text, "DRAW", strlen("DRAW"));
-        memcpy(sub_text + 3, "stale", strlen("stale"));
-    }
+    // if (!game_state.stalemate)
+    // {
+    //     memmove(main_text + strlen(game_state.winner == 'w' ? "WHITE " : "BLACK "), main_text,
+    //             strlen(main_text) + 1);
+    //     memcpy(main_text, (game_state.winner == 'w' ? "WHITE " : "BLACK "),
+    //            strlen(game_state.winner == 'w' ? "WHITE " : "BLACK "));
+    // }
+    // else
+    // {
+    //     memcpy(main_text, "DRAW", strlen("DRAW"));
+    //     memcpy(sub_text + 3, "stale", strlen("stale"));
+    // }
 
-    int main_text_width = MeasureText(main_text, 30);
-    int sub_text_width = MeasureText(sub_text, 20);
+    // int main_text_width = MeasureText(main_text, 30);
+    // int sub_text_width = MeasureText(sub_text, 20);
 
-    DrawText(main_text, BOARD_WIDTH / 2 - main_text_width / 2, 295, 30, BLACK);
-    DrawText(sub_text, BOARD_WIDTH / 2 - sub_text_width / 2, 330, 20, BLACK);
+    // DrawText(main_text, BOARD_WIDTH / 2 - main_text_width / 2, 295, 30, BLACK);
+    // DrawText(sub_text, BOARD_WIDTH / 2 - sub_text_width / 2, 330, 20, BLACK);
 
-    Rectangle reset_button = {225, 365, 150, 40};
+    // Rectangle reset_button = {225, 365, 150, 40};
 
-    if (draw_button(reset_button, "RESET", 20))
-    {
-        reset_game();
-    }
+    // if (draw_button(reset_button, "RESET", 20))
+    // {
+    // }
 }
 
 Texture2D get_piece_texture(PieceTypeEnum type, char color)
@@ -228,30 +218,24 @@ void draw_image(Texture2D texture, int x, int y)
 
 void draw_pieces()
 {
-    for (int i = 0; i < MAX_PIECES; i++)
-    {
-        PieceMapEntry *entry = &map.entries[i];
-        if (entry->is_alive)
-        {
-            draw_image(entry->texture, entry->x_pos, entry->y_pos);
-        }
-    }
+    // for (int i = 0; i < MAX_PIECES; i++)
+    // {
+    //     PieceMapEntry *entry = &map.entries[i];
+    //     if (entry->is_alive)
+    //     {
+    //         draw_image(entry->texture, entry->x_pos, entry->y_pos);
+    //     }
+    // }
 }
 
-void draw_open_routes()
-{
-    for (int i = 0; i < open_routes.count; i++)
-    {
-        draw_piece_route(open_routes.routes[i].x, open_routes.routes[i].y);
-    }
-}
+void draw_open_routes() {}
 
 void draw_selection()
 {
-    if (current_piece && current_piece->is_alive && game_state.status == SELECTING)
-    {
-        draw_piece_selection(current_piece->x_pos, current_piece->y_pos);
-    }
+    // if (current_piece && current_piece->is_alive && game_state.status == SELECTING)
+    // {
+    //     draw_piece_selection(current_piece->x_pos, current_piece->y_pos);
+    // }
 }
 
 bool draw_button(Rectangle bounds, const char *text, int font_size)
@@ -293,14 +277,14 @@ bool draw_image_button(Rectangle bounds, Texture2D texture)
 
 void draw_king_attacked()
 {
-    PieceMapEntry *kings[2] = {&map.entries[28], &map.entries[4]};
-    for (int i = 0; i < 2; i++)
-    {
-        if (kings[i] != NULL &&
-            calculate_square_attacked((XYPosition){kings[i]->x_pos, kings[i]->y_pos},
-                                      kings[i]->color))
-        {
-            draw_king_danger(kings[i]->x_pos, kings[i]->y_pos);
-        }
-    }
+    // PieceMapEntry *kings[2] = {&map.entries[28], &map.entries[4]};
+    // for (int i = 0; i < 2; i++)
+    // {
+    //     if (kings[i] != NULL &&
+    //         calculate_square_attacked((XYPosition){kings[i]->x_pos, kings[i]->y_pos},
+    //                                   kings[i]->color))
+    //     {
+    //         draw_king_danger(kings[i]->x_pos, kings[i]->y_pos);
+    //     }
+    // }
 }
