@@ -1,6 +1,7 @@
 
-#include "../raylib/include/raylib.h"
 #include <stdbool.h>
+#include <stdio.h>  // IWYU pragma: export
+#include <stdlib.h> // IWYU pragma: export
 
 #ifndef DEFS_H
 #define DEFS_H
@@ -17,145 +18,89 @@
 #define BOARD_WIDTH 600
 
 #define MAX_PIECES 32
-#define MAX_MOVES 32
-#define MAX_POSITION_MOVES 1024
-
-#define INF 10000000
-
-typedef struct
-{
-    int index;
-    int capture_index;
-    int from_x;
-    int from_y;
-    int to_x;
-    int to_y;
-    int sub_x;
-    int sub_y;
-    bool is_promotion;
-    bool is_castle;
-} Move;
-
-typedef struct
-{
-    Move moves[MAX_POSITION_MOVES];
-    int count;
-} MoveHistory;
+#define BOARD_SIZE 8
+#define MAX_MOVES 256
 
 typedef enum
 {
-    PLAYER_WHITE,
-    PLAYER_BLACK,
-    NIL
-} PlayerEnum;
-
-typedef enum
-{
-    FRIENDLY,
-    ENEMY,
     EMPTY,
-    OUTSIDE
-} SquareStatusEnum;
-
-typedef enum
-{
     PAWN,
     KNIGHT,
     BISHOP,
     ROOK,
     QUEEN,
     KING
-} PieceTypeEnum;
+} PieceType;
 
 typedef enum
 {
-    SELECTING,
-    APPLYING,
-    NONE
-} GameStateEnum;
+    WHITE,
+    BLACK
+} PieceColor;
 
 typedef struct
 {
-    int move;
-    char color;
-    GameStateEnum status;
-    bool promotion_active;
-    bool game_over;
-    bool stalemate;
-    bool flip;
-    int promotion_x;
-    int promotion_y;
-    PlayerEnum winner;
-} GameState;
+    PieceType type;
+    PieceColor color;
+} Piece;
 
 typedef struct
 {
-    PieceTypeEnum type;
-    char color;
+    PieceType type;
+    PieceColor color;
     int x;
     int y;
     bool is_alive;
 } StarterPiece;
 
-extern StarterPiece starter_pieces[MAX_PIECES];
+typedef struct
+{
+    Piece squares[BOARD_SIZE][BOARD_SIZE];
+} Board;
 
 typedef struct
 {
-    int index;
-    PieceTypeEnum type;
-    char color;
-    int x_pos;
-    int y_pos;
-    bool is_alive;
-    Texture2D texture;
-    int move_count;
-    int double_move_at;
-} PieceMapEntry;
+    Board board;
+
+    PieceColor turn;
+
+    bool white_can_castle_kingside;
+    bool white_can_castle_queenside;
+    bool black_can_castle_kingside;
+    bool black_can_castle_queenside;
+
+    int en_passant_x;
+    int en_passant_y;
+
+    int halfmove_clock;
+    int fullmove_number;
+} GameState;
+
+typedef enum
+{
+    MOVE_NORMAL,
+    MOVE_CASTLE,
+    MOVE_EN_PASSANT,
+    MOVE_PROMOTION
+} MoveType;
 
 typedef struct
 {
-    PieceMapEntry entries[MAX_PIECES];
-    int count;
-} PieceMap;
+    MoveType type;
+    int from_x;
+    int from_y;
+    int to_x;
+    int to_y;
+} Move;
 
-typedef struct
-{
-    PieceTypeEnum type;
-    int value;
-} PieceValueMapEntry;
-
-typedef struct
-{
-    int value;
-    PieceTypeEnum type;
-} PieceMapValue;
-
-typedef struct
-{
-    int x;
-    int y;
-    bool is_enemy;
-} XYPosition;
-
-typedef struct
-{
-    XYPosition routes[MAX_PIECES];
-    int count;
-} OpenRoutes;
-
-typedef struct
-{
-    Texture2D texture;
-    PieceTypeEnum type;
-} PromotionPiece;
-
-extern OpenRoutes open_routes;
-
-extern int pawn_directions[2];
-extern int knight_directions[8][2];
-extern int bishop_directions[4][2];
-extern int rook_directions[4][2];
-extern int king_directions[8][2];
-extern int king_castle_directions[2][2];
+#define TEST(condition)                                                                            \
+    do                                                                                             \
+    {                                                                                              \
+        if (!(condition))                                                                          \
+        {                                                                                          \
+            printf("FAIL: %s:%d: %s\n", __FILE__, __LINE__, #condition);                           \
+            exit(1);                                                                               \
+        }                                                                                          \
+    } while (0)
 
 #endif

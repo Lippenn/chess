@@ -1,6 +1,5 @@
-#include "textures.h"
 
-#include "../raylib/include/raylib.h"
+#include "textures.h"
 
 Texture2D white_pawn;
 Texture2D white_knight;

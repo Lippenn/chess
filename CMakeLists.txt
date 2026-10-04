@@ -9,8 +9,11 @@ add_executable(Chess
     src/main.c
     src/textures.c
     src/draw.c
+    src/fen.c
     src/game.c
+    src/moves.c
 )
+
 
 target_include_directories(Chess PRIVATE
     ${CMAKE_SOURCE_DIR}/include
@@ -30,4 +33,23 @@ target_link_libraries(Chess PRIVATE
     opengl32
     gdi32
     winmm
+)
+
+# --------------------
+# Tests
+# --------------------
+
+add_executable(ChessTests
+    src/game.c
+    src/fen.c
+    src/moves.c
+
+    tests/src/test_main.c
+    tests/src/test_game.c
+    tests/src/test_moves.c
+    tests/src/test_fen.c
+)
+
+target_include_directories(ChessTests PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
 )
