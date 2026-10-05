@@ -51,7 +51,7 @@ int main(void)
              "Test white piece normal move restricted by check");
     clock_t end = clock();
     double elapsed_ms = (double)(end - start) / CLOCKS_PER_SEC * 1000.0;
-    printf("%-60s           (%8.3f ms)\n", "All tests passed!", elapsed_ms);
+    printf("%-60s        (%8.3f ms)\n", "All tests passed!", elapsed_ms);
 
     return 0;
 }
