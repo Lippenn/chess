@@ -1,5 +1,6 @@
 #ifndef TEXTURES_H
 #define TEXTURES_H
+#include "defs.h"
 
 #include "../raylib/include/raylib.h"
 
@@ -19,5 +20,7 @@ extern Texture2D black_king;
 
 void load_textures(void);
 void unload_textures(void);
-
+void set_textures(void);
+void draw_textures(void);
+Texture2D get_piece_texture(Piece piece);
 #endif

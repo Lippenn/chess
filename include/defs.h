@@ -16,10 +16,21 @@
 
 #define BOARD_HEIGHT 600
 #define BOARD_WIDTH 600
+#define BOARD_Y HEADER_HEIGHT
 
 #define MAX_PIECES 32
 #define BOARD_SIZE 8
 #define MAX_MOVES 256
+
+#define TEST(condition)                                                                            \
+    do                                                                                             \
+    {                                                                                              \
+        if (!(condition))                                                                          \
+        {                                                                                          \
+            printf("FAIL: %s:%d: %s\n", __FILE__, __LINE__, #condition);                           \
+            exit(1);                                                                               \
+        }                                                                                          \
+    } while (0)
 
 typedef enum
 {
@@ -34,8 +45,8 @@ typedef enum
 
 typedef enum
 {
-    WHITE,
-    BLACK
+    PIECE_WHITE,
+    PIECE_BLACK
 } PieceColor;
 
 typedef struct
@@ -50,31 +61,19 @@ typedef struct
     PieceColor color;
     int x;
     int y;
-    bool is_alive;
-} StarterPiece;
+} SelectedPiece;
 
 typedef struct
 {
     Piece squares[BOARD_SIZE][BOARD_SIZE];
 } Board;
 
-typedef struct
+typedef enum
 {
-    Board board;
-
-    PieceColor turn;
-
-    bool white_can_castle_kingside;
-    bool white_can_castle_queenside;
-    bool black_can_castle_kingside;
-    bool black_can_castle_queenside;
-
-    int en_passant_x;
-    int en_passant_y;
-
-    int halfmove_clock;
-    int fullmove_number;
-} GameState;
+    SELECTING,
+    APPLYING,
+    NONE
+} BoardStatus;
 
 typedef enum
 {
@@ -93,14 +92,25 @@ typedef struct
     int to_y;
 } Move;
 
-#define TEST(condition)                                                                            \
-    do                                                                                             \
-    {                                                                                              \
-        if (!(condition))                                                                          \
-        {                                                                                          \
-            printf("FAIL: %s:%d: %s\n", __FILE__, __LINE__, #condition);                           \
-            exit(1);                                                                               \
-        }                                                                                          \
-    } while (0)
+typedef struct
+{
+    Board board;
+
+    SelectedPiece selected_piece;
+    BoardStatus board_status;
+
+    PieceColor turn;
+
+    bool white_can_castle_kingside;
+    bool white_can_castle_queenside;
+    bool black_can_castle_kingside;
+    bool black_can_castle_queenside;
+
+    int en_passant_x;
+    int en_passant_y;
+
+    int halfmove_clock;
+    int fullmove_number;
+} GameState;
 
 #endif

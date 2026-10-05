@@ -16,8 +16,8 @@ void test_white_pawn_normal_move(void)
 {
     GameState game = {0};
 
-    game.turn = WHITE;
-    game.board.squares[4][4] = (Piece){PAWN, WHITE};
+    game.turn = PIECE_WHITE;
+    game.board.squares[4][4] = (Piece){PAWN, PIECE_WHITE};
 
     Move moves[MAX_MOVES];
 
@@ -29,7 +29,7 @@ void test_white_pawn_normal_move(void)
     TEST(moves[0].to_x == 4);
     TEST(moves[0].to_y == 3);
 
-    game.board.squares[3][4] = (Piece){KNIGHT, WHITE};
+    game.board.squares[3][4] = (Piece){KNIGHT, PIECE_WHITE};
     counter = 0;
     generate_legal_moves_by_piece(&game, game.board.squares[4][4], &moves, &counter, 4, 4);
     TEST(counter == 0);
@@ -39,8 +39,8 @@ void test_white_pawn_double_move(void)
 {
     GameState game = {0, .en_passant_x = -1, .en_passant_y = -1};
 
-    game.turn = WHITE;
-    game.board.squares[6][4] = (Piece){PAWN, WHITE};
+    game.turn = PIECE_WHITE;
+    game.board.squares[6][4] = (Piece){PAWN, PIECE_WHITE};
 
     Move moves[MAX_MOVES];
 
@@ -56,7 +56,7 @@ void test_white_pawn_double_move(void)
     TEST(moves[1].to_x == 4);
     TEST(moves[1].to_y == 4);
 
-    game.board.squares[4][4] = (Piece){KNIGHT, WHITE};
+    game.board.squares[4][4] = (Piece){KNIGHT, PIECE_WHITE};
     counter = 0;
     generate_legal_moves_by_piece(&game, game.board.squares[6][4], &moves, &counter, 4, 6);
     TEST(counter == 1);
@@ -66,9 +66,9 @@ void test_white_pawn_capture_move(void)
 {
     GameState game = {0, .en_passant_x = -1, .en_passant_y = -1};
 
-    game.turn = WHITE;
-    game.board.squares[4][4] = (Piece){PAWN, WHITE};
-    game.board.squares[3][5] = (Piece){PAWN, BLACK};
+    game.turn = PIECE_WHITE;
+    game.board.squares[4][4] = (Piece){PAWN, PIECE_WHITE};
+    game.board.squares[3][5] = (Piece){PAWN, PIECE_BLACK};
 
     Move moves[MAX_MOVES];
 
@@ -89,9 +89,9 @@ void test_white_pawn_en_passant_move(void)
 {
     GameState game = {0, .en_passant_x = -1, .en_passant_y = -1};
 
-    game.turn = WHITE;
-    game.board.squares[3][3] = (Piece){PAWN, WHITE};
-    game.board.squares[3][4] = (Piece){PAWN, BLACK};
+    game.turn = PIECE_WHITE;
+    game.board.squares[3][3] = (Piece){PAWN, PIECE_WHITE};
+    game.board.squares[3][4] = (Piece){PAWN, PIECE_BLACK};
     game.en_passant_x = 4;
     game.en_passant_y = 2;
 
@@ -112,8 +112,8 @@ void test_white_pawn_promotion_move(void)
 {
     GameState game = {0, .en_passant_x = -1, .en_passant_y = -1};
 
-    game.turn = WHITE;
-    game.board.squares[1][3] = (Piece){PAWN, WHITE};
+    game.turn = PIECE_WHITE;
+    game.board.squares[1][3] = (Piece){PAWN, PIECE_WHITE};
     Move moves[MAX_MOVES];
 
     int counter = 0;
@@ -129,8 +129,8 @@ void test_white_knight_normal_move(void)
 {
     GameState game = {0};
 
-    game.turn = WHITE;
-    game.board.squares[4][4] = (Piece){KNIGHT, WHITE};
+    game.turn = PIECE_WHITE;
+    game.board.squares[4][4] = (Piece){KNIGHT, PIECE_WHITE};
 
     Move moves[MAX_MOVES];
 
@@ -158,8 +158,8 @@ void test_white_bishop_normal_move(void)
 
     GameState game = {0};
 
-    game.turn = WHITE;
-    game.board.squares[4][4] = (Piece){BISHOP, WHITE};
+    game.turn = PIECE_WHITE;
+    game.board.squares[4][4] = (Piece){BISHOP, PIECE_WHITE};
 
     Move moves[MAX_MOVES];
 
@@ -191,8 +191,8 @@ void test_white_rook_normal_move(void)
 
     GameState game = {0};
 
-    game.turn = WHITE;
-    game.board.squares[4][4] = (Piece){ROOK, WHITE};
+    game.turn = PIECE_WHITE;
+    game.board.squares[4][4] = (Piece){ROOK, PIECE_WHITE};
 
     Move moves[MAX_MOVES];
     int counter = 0;
@@ -225,8 +225,8 @@ void test_white_queen_normal_move(void)
 
     GameState game = {0};
 
-    game.turn = WHITE;
-    game.board.squares[4][4] = (Piece){QUEEN, WHITE};
+    game.turn = PIECE_WHITE;
+    game.board.squares[4][4] = (Piece){QUEEN, PIECE_WHITE};
 
     Move moves[MAX_MOVES];
     int counter = 0;
@@ -276,8 +276,8 @@ void test_white_king_normal_move(void)
 
     GameState game = {0};
 
-    game.turn = WHITE;
-    game.board.squares[4][4] = (Piece){KING, WHITE};
+    game.turn = PIECE_WHITE;
+    game.board.squares[4][4] = (Piece){KING, PIECE_WHITE};
 
     Move moves[MAX_MOVES];
     int counter = 0;
@@ -300,9 +300,9 @@ void test_white_king_normal_move_restricted_by_check(void)
 
     GameState game = {0};
 
-    game.turn = WHITE;
-    game.board.squares[4][4] = (Piece){KING, WHITE};
-    game.board.squares[3][0] = (Piece){ROOK, BLACK};
+    game.turn = PIECE_WHITE;
+    game.board.squares[4][4] = (Piece){KING, PIECE_WHITE};
+    game.board.squares[3][0] = (Piece){ROOK, PIECE_BLACK};
 
     Move moves[MAX_MOVES];
     int counter = 0;
@@ -321,10 +321,10 @@ void test_white_piece_normal_move_restricted_by_check(void)
 {
     GameState game = {0};
 
-    game.turn = WHITE;
-    game.board.squares[4][4] = (Piece){KING, WHITE};
-    game.board.squares[4][3] = (Piece){ROOK, WHITE};
-    game.board.squares[4][0] = (Piece){ROOK, BLACK};
+    game.turn = PIECE_WHITE;
+    game.board.squares[4][4] = (Piece){KING, PIECE_WHITE};
+    game.board.squares[4][3] = (Piece){ROOK, PIECE_WHITE};
+    game.board.squares[4][0] = (Piece){ROOK, PIECE_BLACK};
 
     Move moves[MAX_MOVES];
     int counter = 0;
@@ -342,9 +342,9 @@ void test_white_queen_side_castle_move(void)
 
     GameState game = {0};
 
-    game.turn = WHITE;
-    game.board.squares[7][4] = (Piece){KING, WHITE};
-    game.board.squares[7][0] = (Piece){ROOK, WHITE};
+    game.turn = PIECE_WHITE;
+    game.board.squares[7][4] = (Piece){KING, PIECE_WHITE};
+    game.board.squares[7][0] = (Piece){ROOK, PIECE_WHITE};
     game.white_can_castle_queenside = true;
     Move moves[MAX_MOVES];
     int counter = 0;
@@ -360,9 +360,9 @@ void test_white_king_side_castle_move(void)
 {
     GameState game = {0};
 
-    game.turn = WHITE;
-    game.board.squares[7][4] = (Piece){KING, WHITE};
-    game.board.squares[7][7] = (Piece){ROOK, WHITE};
+    game.turn = PIECE_WHITE;
+    game.board.squares[7][4] = (Piece){KING, PIECE_WHITE};
+    game.board.squares[7][7] = (Piece){ROOK, PIECE_WHITE};
     game.white_can_castle_kingside = true;
     Move moves[MAX_MOVES];
     int counter = 0;
@@ -379,8 +379,8 @@ void test_white_piece_normal_move(void)
 
     GameState game = {0};
 
-    game.turn = WHITE;
-    game.board.squares[7][4] = (Piece){KING, WHITE};
+    game.turn = PIECE_WHITE;
+    game.board.squares[7][4] = (Piece){KING, PIECE_WHITE};
 
     make_move(&game, (Move){.type = MOVE_NORMAL, .from_x = 4, .from_y = 7, .to_x = 4, .to_y = 6});
 

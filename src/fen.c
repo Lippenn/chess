@@ -36,7 +36,7 @@ void set_board_pieces(Board *board, char piece_str[128])
         else
         {
             Piece piece = {EMPTY};
-            piece.color = isupper(c) ? WHITE : BLACK;
+            piece.color = isupper(c) ? PIECE_WHITE : PIECE_BLACK;
             switch (tolower(c))
             {
             case 'p':
@@ -81,7 +81,7 @@ void load_fen(GameState *game_state, char *fen)
         return;
     }
 
-    game_state->turn = color_str[0] == 'w' ? WHITE : BLACK;
+    game_state->turn = color_str[0] == 'w' ? PIECE_WHITE : PIECE_BLACK;
     game_state->white_can_castle_kingside = strchr(castle_str, 'K') != NULL;
     game_state->white_can_castle_queenside = strchr(castle_str, 'Q') != NULL;
     game_state->black_can_castle_kingside = strchr(castle_str, 'k') != NULL;
@@ -146,7 +146,7 @@ void generate_fen(GameState *game_state, char *fen)
             case EMPTY:
                 break;
             }
-            pos += sprintf(&fen[pos], "%c", piece.color == WHITE ? toupper(c) : c);
+            pos += sprintf(&fen[pos], "%c", piece.color == PIECE_WHITE ? toupper(c) : c);
         }
         if (empty_count > 0)
             pos += sprintf(&fen[pos], "%d", empty_count);
@@ -155,7 +155,7 @@ void generate_fen(GameState *game_state, char *fen)
             fen[pos++] = '/';
     }
     fen[pos++] = ' ';
-    fen[pos++] = game_state->turn == WHITE ? 'w' : 'b';
+    fen[pos++] = game_state->turn == PIECE_WHITE ? 'w' : 'b';
     fen[pos++] = ' ';
 
     int has_castling = 0;

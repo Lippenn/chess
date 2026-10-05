@@ -9,6 +9,7 @@ add_executable(Chess
     src/main.c
     src/textures.c
     src/draw.c
+    src/board.c
     src/fen.c
     src/game.c
     src/moves.c
@@ -52,4 +53,8 @@ add_executable(ChessTests
 
 target_include_directories(ChessTests PRIVATE
     ${CMAKE_SOURCE_DIR}/include
+    ${CMAKE_SOURCE_DIR}/raylib/include
+)
+target_link_directories(ChessTests PRIVATE
+    ${CMAKE_SOURCE_DIR}/raylib/lib
 )

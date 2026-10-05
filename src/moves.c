@@ -29,12 +29,16 @@ int king_directions[8][2] = {{1, -1}, {1, 1}, {-1, 1}, {-1, -1}, {0, -1}, {1, 0}
 bool targeted_by_pawn(GameState *game_state_moves, int king_x, int king_y,
                       PieceColor current_piece_color)
 {
-    int direction = current_piece_color == WHITE ? 1 : -1;
+    int direction = current_piece_color == PIECE_WHITE ? 1 : -1;
     for (int dx = -1; dx <= 1; dx += 2)
     {
         int pawn_x = king_x + dx;
         int pawn_y = king_y + direction;
         Piece pawn = game_state_moves->board.squares[pawn_y][pawn_x];
+
+        if (pawn_x < 0 || pawn_x > 7 || pawn_y < 0 || pawn_y > 7)
+            continue;
+
         if (pawn.color != current_piece_color && pawn.type == PAWN)
         {
             return true;
@@ -109,7 +113,7 @@ bool targeted_by_knight(GameState *game_state_moves, int king_x, int king_y,
         int target_x = king_x + knight_directions[i][0];
         int target_y = king_y + knight_directions[i][1];
 
-        if ((target_x > 7 || target_x < 0) && (target_y > 7 || target_y < 0))
+        if (target_x > 7 || target_x < 0 || target_y > 7 || target_y < 0)
             continue;
 
         Piece target = game_state_moves->board.squares[target_y][target_x];
@@ -183,7 +187,7 @@ void add_move(Move new_move, Move (*pseudo)[MAX_MOVES], int *counter)
 
 bool can_pawn_move_two(const Board *board, int x, int y, PieceColor color, int direction)
 {
-    int start_rank = color == WHITE ? 6 : 1;
+    int start_rank = color == PIECE_WHITE ? 6 : 1;
 
     if (y != start_rank)
         return false;
@@ -195,21 +199,21 @@ bool can_pawn_move_two(const Board *board, int x, int y, PieceColor color, int d
 void generate_pseudo_pawn_moves(GameState *game_state_moves, Piece piece, Move (*pseudo)[MAX_MOVES],
                                 int *counter, int x, int y)
 {
-    int direction = game_state_moves->turn == WHITE ? -1 : 1;
+    int direction = game_state_moves->turn == PIECE_WHITE ? -1 : 1;
 
     if (game_state_moves->board.squares[y + direction][x].type == EMPTY)
     {
         Move new_move = {.from_x = x, .from_y = y, .to_x = x, .to_y = y + direction};
-        add_move((Move){(y + direction == 7 && piece.color == BLACK) ||
-                                (y + direction == 0 && piece.color == WHITE)
+        add_move((Move){(y + direction == 7 && piece.color == PIECE_BLACK) ||
+                                (y + direction == 0 && piece.color == PIECE_WHITE)
                             ? MOVE_PROMOTION
                             : MOVE_NORMAL,
                         .from_x = x, .from_y = y, .to_x = x, .to_y = y + direction},
                  pseudo, counter);
         if (can_pawn_move_two(&game_state_moves->board, x, y, game_state_moves->turn, direction))
         {
-            add_move((Move){(y + (direction * 2) == 7 && piece.color == BLACK) ||
-                                    (y + (direction * 2) == 0 && piece.color == WHITE)
+            add_move((Move){(y + (direction * 2) == 7 && piece.color == PIECE_BLACK) ||
+                                    (y + (direction * 2) == 0 && piece.color == PIECE_WHITE)
                                 ? MOVE_PROMOTION
                                 : MOVE_NORMAL,
                             .from_x = x, .from_y = y, .to_x = x, .to_y = y + (direction * 2)},
@@ -227,8 +231,8 @@ void generate_pseudo_pawn_moves(GameState *game_state_moves, Piece piece, Move (
 
         if (target.type != EMPTY && target.color != game_state_moves->turn)
         {
-            add_move((Move){(target_y == 7 && piece.color == BLACK) ||
-                                    (target_y == 0 && piece.color == WHITE)
+            add_move((Move){(target_y == 7 && piece.color == PIECE_BLACK) ||
+                                    (target_y == 0 && piece.color == PIECE_WHITE)
                                 ? MOVE_PROMOTION
                                 : MOVE_NORMAL,
                             .from_x = x, .from_y = y, .to_x = target_x, .to_y = target_y},
@@ -255,7 +259,7 @@ void generate_pseudo_knight_moves(GameState *game_state_moves, Piece piece,
         int target_x = x + knight_directions[i][0];
         int target_y = y + knight_directions[i][1];
 
-        if ((target_x > 7 || target_x < 0) && (target_y > 7 || target_y < 0))
+        if (target_x > 7 || target_x < 0 || target_y > 7 || target_y < 0)
             continue;
 
         Piece target = game_state_moves->board.squares[target_y][target_x];
@@ -381,7 +385,7 @@ void generate_pseudo_king_moves(GameState *game_state_moves, Piece piece, Move (
         }
     }
 
-    if (game_state_moves->turn == WHITE)
+    if (game_state_moves->turn == PIECE_WHITE)
     {
         if (game_state_moves->white_can_castle_kingside)
         {
@@ -474,8 +478,7 @@ bool in_check_after_move_same_color(GameState *game_state_moves, Move move)
     to_piece_pointer->color = from_piece.color;
     to_piece_pointer->type = from_piece.type;
     from_piece_pointer->type = EMPTY;
-
-    in_check = is_king_in_check(*game_state_moves, to_piece.color);
+    in_check = is_king_in_check(*game_state_moves, from_piece.color);
     to_piece_pointer->color = to_piece.color;
     to_piece_pointer->type = to_piece.type;
     from_piece_pointer->type = from_piece.type;
@@ -491,6 +494,7 @@ void generate_legal_moves_by_piece(GameState *game_state_moves, Piece piece,
     int legal_move_counter = 0;
     for (int i = 0; i < *counter; i++)
     {
+
         if (!in_check_after_move_same_color(game_state_moves, (*pseudo)[i]))
         {
             legal_moves[legal_move_counter++] = (*pseudo)[i];
@@ -532,11 +536,11 @@ int generate_legal_moves(GameState *game_state_moves, Move *moves[MAX_MOVES])
 
 void next_move(GameState *game_state)
 {
-    if (game_state->turn == BLACK)
+    if (game_state->turn == PIECE_BLACK)
     {
         game_state->fullmove_number += 1;
     }
-    game_state->turn = game_state->turn == WHITE ? BLACK : WHITE;
+    game_state->turn = game_state->turn == PIECE_WHITE ? PIECE_BLACK : PIECE_WHITE;
 }
 
 void make_move_normal(Piece *from_piece_pointer, Piece *to_piece_pointer)

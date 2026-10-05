@@ -1,22 +1,15 @@
-// #include "../include/draw.h"
-// #include "../include/textures.h"
 #include "../raylib/include/raylib.h"
+#include "board.h"
+#include "game.h"
+#include "textures.h"
 
-void set_textures()
+GameState game_state;
+
+void initalize()
 {
-    // header_texture = LoadRenderTexture(HEADER_WIDTH, HEADER_HEIGHT);
-    // board_texture = LoadRenderTexture(BOARD_WIDTH, BOARD_HEIGHT);
-    // footer_texture = LoadRenderTexture(FOOTER_WIDTH, FOOTER_HEIGHT);
-
-    // set_header_texture();
-    // set_board_texture();
-    // set_footer_texture();
-    // load_textures();
+    init_game_state(&game_state);
+    set_textures();
 }
-
-void initalize() {}
-
-void draw() {}
 
 int main()
 {
@@ -29,7 +22,16 @@ int main()
     while (!WindowShouldClose())
     {
         BeginDrawing();
-        draw();
+        draw(&game_state);
+        if (IsMouseButtonPressed(MOUSE_BUTTON_LEFT))
+        {
+            int x, y;
+
+            if (get_board_square(GetMousePosition(), &x, &y))
+            {
+                handle_board_click(&game_state, x, y);
+            }
+        }
         EndDrawing();
     }
 }
