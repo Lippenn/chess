@@ -41,8 +41,11 @@ target_link_libraries(Chess PRIVATE
 # --------------------
 
 add_executable(ChessTests
-    src/game.c
+    src/textures.c
+    src/draw.c
+    src/board.c
     src/fen.c
+    src/game.c
     src/moves.c
 
     tests/src/test_main.c
@@ -57,4 +60,21 @@ target_include_directories(ChessTests PRIVATE
 )
 target_link_directories(ChessTests PRIVATE
     ${CMAKE_SOURCE_DIR}/raylib/lib
+)
+
+target_link_directories(ChessTests PRIVATE
+    ${CMAKE_SOURCE_DIR}/raylib/lib
+)
+
+
+target_compile_definitions(ChessTests PRIVATE
+    ROOT_PATH="${CMAKE_SOURCE_DIR}"
+)
+
+
+target_link_libraries(ChessTests PRIVATE
+    raylib
+    opengl32
+    gdi32
+    winmm
 )
