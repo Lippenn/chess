@@ -4,8 +4,6 @@
 #include "raylib.h"
 #include <math.h>
 
-// #include "game.h"
-// #include <math.h>
 Rectangle board = {0, 100, BOARD_WIDTH, BOARD_HEIGHT};
 RenderTexture2D board_texture;
 RenderTexture2D header_texture;

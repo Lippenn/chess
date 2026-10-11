@@ -188,7 +188,6 @@ void add_move(Move new_move, Move (*pseudo)[MAX_MOVES], int *counter)
 bool can_pawn_move_two(const Board *board, int x, int y, PieceColor color, int direction)
 {
     int start_rank = color == PIECE_WHITE ? 6 : 1;
-
     if (y != start_rank)
         return false;
     if (board->squares[y + (direction * 2)][x].type != EMPTY)
@@ -228,9 +227,10 @@ void generate_pseudo_pawn_moves(GameState *game_state_moves, Piece piece, Move (
         if (target_x < 0 || target_x > 7)
             return;
         Piece target = game_state_moves->board.squares[target_y][target_x];
-
+        // printf("%i,%i\n", target.color, target.type);
         if (target.type != EMPTY && target.color != game_state_moves->turn)
         {
+            // printf("ADD\n");
             add_move((Move){(target_y == 7 && piece.color == PIECE_BLACK) ||
                                     (target_y == 0 && piece.color == PIECE_WHITE)
                                 ? MOVE_PROMOTION
@@ -494,7 +494,6 @@ void generate_legal_moves_by_piece(GameState *game_state_moves, Piece piece,
     int legal_move_counter = 0;
     for (int i = 0; i < *counter; i++)
     {
-
         if (!in_check_after_move_same_color(game_state_moves, (*pseudo)[i]))
         {
             legal_moves[legal_move_counter++] = (*pseudo)[i];
@@ -504,7 +503,6 @@ void generate_legal_moves_by_piece(GameState *game_state_moves, Piece piece,
     {
         (*pseudo)[i] = legal_moves[i];
     }
-
     *counter = legal_move_counter;
 }
 
@@ -592,7 +590,6 @@ void make_move(GameState *game_state, Move move)
 {
     Piece *from_piece_pointer = &game_state->board.squares[move.from_y][move.from_x];
     Piece *to_piece_pointer = &game_state->board.squares[move.to_y][move.to_x];
-
     switch (move.type)
     {
     case MOVE_NORMAL:
@@ -614,6 +611,5 @@ void make_move(GameState *game_state, Move move)
 
 bool moves_equal(Move a, Move b)
 {
-    return a.from_x == b.from_x && a.from_y == b.from_y && a.to_x == b.to_x && a.to_y == b.to_y &&
-           a.type == b.type;
+    return a.from_x == b.from_x && a.from_y == b.from_y && a.to_x == b.to_x && a.to_y == b.to_y;
 }
