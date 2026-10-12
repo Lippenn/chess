@@ -1,8 +1,10 @@
-// #include "../include/draw.h"
 #include "./draw.h"
+#include "./game.h"
+#include "./moves.h"
 #include "./textures.h"
 #include "raylib.h"
 #include <math.h>
+#include <string.h>
 
 Rectangle board = {0, 100, BOARD_WIDTH, BOARD_HEIGHT};
 RenderTexture2D board_texture;
@@ -26,6 +28,26 @@ void set_header_texture()
     // DrawText(turn_text_color, 320, 50, 20, RAYWHITE);
 
     EndTextureMode();
+}
+
+bool draw_button(Rectangle bounds, const char *text, int font_size)
+{
+    Vector2 mouse = GetMousePosition();
+
+    bool hovered = CheckCollisionPointRec(mouse, bounds);
+    bool clicked = hovered && IsMouseButtonPressed(MOUSE_BUTTON_LEFT);
+
+    Color background = hovered ? GRAY : LIGHTGRAY;
+
+    DrawRectangleRec(bounds, background);
+    DrawRectangleLinesEx(bounds, 2, BLACK);
+
+    int text_width = MeasureText(text, font_size);
+
+    DrawText(text, bounds.x + (bounds.width - text_width) / 2,
+             bounds.y + (bounds.height - font_size) / 2, font_size, BLACK);
+
+    return clicked;
 }
 
 void set_footer_texture()
@@ -98,6 +120,129 @@ void draw_piece_route(Move moves[MAX_MOVES], int counter)
     }
 }
 
+bool draw_image_button(Rectangle bounds, Texture2D texture)
+{
+    Vector2 mouse = GetMousePosition();
+
+    bool hovered = CheckCollisionPointRec(mouse, bounds);
+    bool clicked = hovered && IsMouseButtonPressed(MOUSE_BUTTON_LEFT);
+
+    Color background = hovered ? LIGHTGRAY : WHITE;
+    DrawRectangleRec(bounds, background);
+    Rectangle source = {0, 0, (float)texture.width, (float)texture.height};
+    DrawTexturePro(texture, source, bounds, (Vector2){0, 0}, 0.0f, WHITE);
+    DrawRectangleLinesEx(bounds, 2.0f, hovered ? ORANGE : DARKGRAY);
+    return clicked;
+}
+
+SelectedPiece find_king_by_color(GameState *game_state, PieceColor color)
+{
+    for (int y = 0; y < BOARD_SIZE; y++)
+    {
+        for (int x = 0; x < BOARD_SIZE; x++)
+        {
+            if (game_state->board.squares[y][x].type == KING &&
+                game_state->board.squares[y][x].color == color)
+            {
+                return (SelectedPiece){KING, color, x, y};
+            }
+        }
+    }
+    return (SelectedPiece){EMPTY, PIECE_WHITE, -1, -1};
+}
+
+void draw_king_attacked(GameState *game_state)
+{
+    SelectedPiece white_king = find_king_by_color(game_state, PIECE_WHITE);
+    SelectedPiece black_king = find_king_by_color(game_state, PIECE_BLACK);
+    if (white_king.x != -1 && white_king.y != -1 && is_king_in_check(*game_state, PIECE_WHITE))
+    {
+        DrawRectangle(white_king.x * TILE_SIZE + board.x, white_king.y * TILE_SIZE + board.y,
+                      TILE_SIZE, TILE_SIZE, RED);
+    }
+    if (black_king.x != -1 && black_king.y != -1 && is_king_in_check(*game_state, PIECE_BLACK))
+    {
+        DrawRectangle(black_king.x * TILE_SIZE + board.x, black_king.y * TILE_SIZE + board.y,
+                      TILE_SIZE, TILE_SIZE, RED);
+    }
+}
+
+void draw_promotion_overlay(GameState *game_state)
+{
+    int offset = game_state->selected_piece.color == PIECE_WHITE ? 0 : 4;
+    Texture2D promotion_textures[] = {white_queen, white_rook, white_bishop, white_knight,
+                                      black_queen, black_rook, black_bishop, black_knight};
+    PieceType promotion_enums[] = {QUEEN, ROOK, BISHOP, KNIGHT};
+    Rectangle panel = {125, 275, 350, 150};
+
+    DrawRectangle(0, 0, 600, HEADER_HEIGHT + 600, Fade(BLACK, 0.6f));
+    DrawRectangleRec(panel, RAYWHITE);
+
+    const char *title = "PROMOTE";
+    int title_size = 30;
+    int title_width = MeasureText(title, title_size);
+
+    DrawText(title, panel.x + (panel.width - title_width) / 2, 295, title_size, BLACK);
+
+    float button_size = 75;
+    float spacing = 7;
+
+    float total_width = button_size * 4 + spacing * 3;
+    float start_x = panel.x + (panel.width - total_width) / 2;
+
+    for (int i = offset; i < 4 + offset; i++)
+    {
+        int index = i - offset;
+
+        Rectangle button = {start_x + index * (button_size + spacing), 335, button_size,
+                            button_size};
+
+        bool clicked = draw_image_button(button, promotion_textures[i]);
+        if (clicked)
+        {
+            promote_pawn_to_piece(game_state, promotion_enums[index],
+                                  game_state->selected_piece.color, game_state->selected_piece.x,
+                                  game_state->selected_piece.y);
+            game_state->promotion_overlay_open = false;
+        }
+    }
+}
+
+void draw_game_over_overlay(GameState *game_state)
+{
+    Rectangle panel = {125, 275, 350, 150};
+    DrawRectangle(0, 0, 600, HEADER_HEIGHT + 600, Fade(BLACK, 0.6f));
+    DrawRectangleRec(panel, RAYWHITE);
+    char main_text[20] = "WINS";
+    char sub_text[50] = "by checkmate";
+
+    if (game_state->is_checkmate)
+    {
+        memmove(main_text + strlen(game_state->winner == PIECE_WHITE ? "WHITE " : "BLACK "),
+                main_text, strlen(main_text) + 1);
+        memcpy(main_text, (game_state->winner == PIECE_WHITE ? "WHITE " : "BLACK "),
+               strlen(game_state->winner == PIECE_WHITE ? "WHITE " : "BLACK "));
+    }
+    else
+    {
+        memcpy(main_text, "DRAW", strlen("DRAW"));
+        memcpy(sub_text + 3, "stale", strlen("stale"));
+    }
+
+    int main_text_width = MeasureText(main_text, 30);
+    int sub_text_width = MeasureText(sub_text, 20);
+
+    DrawText(main_text, BOARD_WIDTH / 2 - main_text_width / 2, 295, 30, BLACK);
+    DrawText(sub_text, BOARD_WIDTH / 2 - sub_text_width / 2, 330, 20, BLACK);
+
+    Rectangle reset_button = {225, 365, 150, 40};
+
+    if (draw_button(reset_button, "RESET", 20))
+    {
+        reset_game(game_state);
+    }
+}
+
 // void draw_flip_button()
 // {
 //     Rectangle flip_button = {20, HEADER_HEIGHT + BOARD_HEIGHT + 25, 100, 50};
@@ -120,38 +265,6 @@ void draw_piece_route(Move moves[MAX_MOVES], int counter)
 // {
 //     float scale = 65.0f / texture.width;
 //     DrawTextureEx(texture, (Vector2){x, y}, 0.0f, scale, WHITE);
-// }
-
-// void draw_promotion_overlay()
-// {
-//     // int offset = current_piece->color == 'w' ? 0 : 4;
-
-//     // Rectangle panel = {125, 275, 350, 150};
-
-//     // DrawRectangle(0, 0, 600, HEADER_HEIGHT + 600, Fade(BLACK, 0.6f));
-//     // DrawRectangleRec(panel, RAYWHITE);
-
-//     // const char *title = "PROMOTE";
-//     // int title_size = 30;
-//     // int title_width = MeasureText(title, title_size);
-
-//     // DrawText(title, panel.x + (panel.width - title_width) / 2, 295, title_size, BLACK);
-
-//     // float button_size = 75;
-//     // float spacing = 5;
-
-//     // float total_width = button_size * 4 + spacing * 3;
-//     // float start_x = panel.x + (panel.width - total_width) / 2;
-
-//     // for (int i = offset; i < 4 + offset; i++)
-//     // {
-//     //     int index = i - offset;
-
-//     //     Rectangle button = {start_x + index * (button_size + spacing), 335, button_size,
-//     //                         button_size};
-
-//     //     draw_image_button(button, promotion_pieces[i].texture);
-//     // }
 // }
 // void draw_game_over_overlay()
 // {

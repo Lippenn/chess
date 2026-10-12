@@ -21,8 +21,9 @@ void draw_route(int x, int y);
 void draw_piece_route(Move moves[MAX_MOVES], int counter);
 void draw_open_routes(void);
 void draw_selection(void);
-void draw_king_attacked(void);
-void draw_promotion_overlay(void);
+void draw_king_attacked(GameState *game_state);
+void draw_promotion_overlay(GameState *game_state);
+void draw_game_over_overlay(GameState *game_state);
 bool draw_button(Rectangle bounds, const char *text, int font_size);
 bool draw_image_button(Rectangle bounds, Texture2D texture);
 

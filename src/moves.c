@@ -199,24 +199,31 @@ void generate_pseudo_pawn_moves(GameState *game_state_moves, Piece piece, Move (
                                 int *counter, int x, int y)
 {
     int direction = game_state_moves->turn == PIECE_WHITE ? -1 : 1;
+    int next_y = y + direction;
 
-    if (game_state_moves->board.squares[y + direction][x].type == EMPTY)
+    // Check bounds before accessing the board
+    if (next_y < 0 || next_y >= BOARD_SIZE)
+        return;
+
+    if (game_state_moves->board.squares[next_y][x].type == EMPTY)
     {
-        Move new_move = {.from_x = x, .from_y = y, .to_x = x, .to_y = y + direction};
-        add_move((Move){(y + direction == 7 && piece.color == PIECE_BLACK) ||
-                                (y + direction == 0 && piece.color == PIECE_WHITE)
+        add_move((Move){(next_y == 0 && piece.color == PIECE_WHITE) ||
+                                (next_y == BOARD_SIZE - 1 && piece.color == PIECE_BLACK)
                             ? MOVE_PROMOTION
                             : MOVE_NORMAL,
-                        .from_x = x, .from_y = y, .to_x = x, .to_y = y + direction},
+                        .from_x = x, .from_y = y, .to_x = x, .to_y = next_y},
                  pseudo, counter);
-        if (can_pawn_move_two(&game_state_moves->board, x, y, game_state_moves->turn, direction))
+
+        int double_y = y + (direction * 2);
+
+        if (double_y >= 0 && double_y < BOARD_SIZE &&
+            can_pawn_move_two(&game_state_moves->board, x, y, game_state_moves->turn, direction))
         {
-            add_move((Move){(y + (direction * 2) == 7 && piece.color == PIECE_BLACK) ||
-                                    (y + (direction * 2) == 0 && piece.color == PIECE_WHITE)
-                                ? MOVE_PROMOTION
-                                : MOVE_NORMAL,
-                            .from_x = x, .from_y = y, .to_x = x, .to_y = y + (direction * 2)},
-                     pseudo, counter);
+            add_move(
+                (Move){.type = MOVE_NORMAL, .from_x = x, .from_y = y, .to_x = x, .to_y = double_y},
+                pseudo, counter);
+            game_state_moves->en_passant_x = x;
+            game_state_moves->en_passant_y = double_y - direction;
         }
     }
     for (int dx = -1; dx <= 1; dx += 2)
@@ -227,10 +234,8 @@ void generate_pseudo_pawn_moves(GameState *game_state_moves, Piece piece, Move (
         if (target_x < 0 || target_x > 7)
             return;
         Piece target = game_state_moves->board.squares[target_y][target_x];
-        // printf("%i,%i\n", target.color, target.type);
         if (target.type != EMPTY && target.color != game_state_moves->turn)
         {
-            // printf("ADD\n");
             add_move((Move){(target_y == 7 && piece.color == PIECE_BLACK) ||
                                     (target_y == 0 && piece.color == PIECE_WHITE)
                                 ? MOVE_PROMOTION
@@ -548,25 +553,26 @@ void make_move_normal(Piece *from_piece_pointer, Piece *to_piece_pointer)
     from_piece_pointer->type = EMPTY;
 }
 
-void make_move_promotion(Piece *from_piece_pointer, Piece *to_piece_pointer)
+void make_move_promotion(GameState *game_state, Piece *from_piece_pointer, Piece *to_piece_pointer,
+                         int x, int y)
 {
     to_piece_pointer->color = from_piece_pointer->color;
     to_piece_pointer->type = from_piece_pointer->type;
     from_piece_pointer->type = EMPTY;
+    game_state->promotion_overlay_open = true;
+    game_state->selected_piece =
+        (SelectedPiece){to_piece_pointer->type, from_piece_pointer->color, x, y};
 }
 
 void make_move_en_passant(Piece *from_piece_pointer, Piece *to_piece_pointer, Move move,
                           Board *board)
 {
-    int direction = move.from_x - move.to_x;
-    int captured_x = move.from_x + direction;
-    Piece *captured_pawn = &board->squares[move.from_y][captured_x];
+    Piece *captured_pawn = &board->squares[move.from_y][move.to_x];
 
-    to_piece_pointer->color = from_piece_pointer->color;
-    to_piece_pointer->type = from_piece_pointer->type;
+    *to_piece_pointer = *from_piece_pointer;
 
-    captured_pawn->type = EMPTY;
-    from_piece_pointer->type = EMPTY;
+    *captured_pawn = (Piece){0};
+    *from_piece_pointer = (Piece){0};
 }
 
 void make_move_castle(Piece *from_piece_pointer, Piece *to_piece_pointer, Move move, Board *board)
@@ -596,7 +602,7 @@ void make_move(GameState *game_state, Move move)
         make_move_normal(from_piece_pointer, to_piece_pointer);
         break;
     case MOVE_PROMOTION:
-        make_move_promotion(from_piece_pointer, to_piece_pointer);
+        make_move_promotion(game_state, from_piece_pointer, to_piece_pointer, move.to_x, move.to_y);
         break;
     case MOVE_EN_PASSANT:
         make_move_en_passant(from_piece_pointer, to_piece_pointer, move, &game_state->board);
@@ -605,7 +611,6 @@ void make_move(GameState *game_state, Move move)
         make_move_castle(from_piece_pointer, to_piece_pointer, move, &game_state->board);
         break;
     }
-
     next_move(game_state);
 }
 

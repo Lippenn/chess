@@ -100,11 +100,15 @@ typedef struct
     BoardStatus board_status;
 
     PieceColor turn;
+    PieceColor winner;
 
     bool white_can_castle_kingside;
     bool white_can_castle_queenside;
     bool black_can_castle_kingside;
     bool black_can_castle_queenside;
+    bool promotion_overlay_open;
+    bool is_stalemate;
+    bool is_checkmate;
 
     int en_passant_x;
     int en_passant_y;
