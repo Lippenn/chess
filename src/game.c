@@ -1,16 +1,16 @@
 #include "game.h"
 #include "draw.h"
+#include "engine.h"
 #include "moves.h"
 #include "textures.h"
 #include <stdbool.h>
-#include <stdio.h>
 #include <string.h>
 
 void init_game_state(GameState *game_state)
 {
     Board board;
     load_fen(game_state, "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
-    // load_fen(game_state, "4k3/8/8/3pP3/8/8/8/4K3 w - d6 0 1");
+    load_fen(game_state, "r5rk/5p1p/5R2/4B3/8/8/7P/7K w - - 0 1");
     game_state->board_status = NONE;
 }
 
@@ -18,7 +18,6 @@ void reset_game(GameState *game_state)
 {
     memset(game_state, 0, sizeof(*game_state));
     init_game_state(game_state);
-    printf("RESET - %i\n", game_state->is_checkmate || game_state->is_stalemate);
 }
 
 bool move_piece(GameState *game_state, Piece piece, int x, int y)
@@ -54,31 +53,40 @@ Piece return_piece(GameState *game_state, int x, int y) { return game_state->boa
 
 void handle_board_click(GameState *game_state, int x, int y)
 {
-
-    Piece piece = game_state->board.squares[y][x];
-    if (game_state->board_status == NONE && piece.type != EMPTY && piece.color == game_state->turn)
+    if (game_state->turn == PIECE_WHITE)
     {
-        select_piece(game_state, piece, x, y);
-        game_state->board_status = SELECTING;
-    }
-    else if (game_state->board_status == SELECTING)
-    {
-        Piece piece = return_piece(game_state, x, y);
-        SelectedPiece selected_piece = game_state->selected_piece;
-
-        if (selected_piece.x == x && selected_piece.y == y)
-        {
-            game_state->board_status = NONE;
-        }
-        if (piece.type != EMPTY && piece.color == game_state->turn)
+        Piece piece = game_state->board.squares[y][x];
+        if (game_state->board_status == NONE && piece.type != EMPTY &&
+            piece.color == game_state->turn)
         {
             select_piece(game_state, piece, x, y);
+            game_state->board_status = SELECTING;
         }
-        else
+        else if (game_state->board_status == SELECTING)
         {
-            bool is_move = move_piece(game_state, piece, x, y);
-            if (is_move)
+            Piece piece = return_piece(game_state, x, y);
+            SelectedPiece selected_piece = game_state->selected_piece;
+
+            if (selected_piece.x == x && selected_piece.y == y)
+            {
                 game_state->board_status = NONE;
+            }
+            if (piece.type != EMPTY && piece.color == game_state->turn)
+            {
+                select_piece(game_state, piece, x, y);
+            }
+            else
+            {
+                bool is_move = move_piece(game_state, piece, x, y);
+                if (is_move)
+                {
+                    next_move(game_state);
+                    game_state->board_status = NONE;
+                    Move ai_move = evaluate_position(game_state);
+                    make_move_wo_next_move_ai(game_state, ai_move);
+                    next_move(game_state);
+                }
+            }
         }
     }
 }
@@ -99,15 +107,14 @@ SelectedPiece get_king_by_turn_color(GameState *game_state)
     return (SelectedPiece){KING, game_state->turn, -1, -1};
 }
 
-bool detect_game_over(GameState *game_state)
+void detect_game_over(GameState *game_state)
 {
     if (game_state->is_checkmate || game_state->is_stalemate)
     {
-        return true;
+        return;
     }
     SelectedPiece king = get_king_by_turn_color(game_state);
     Move moves[MAX_MOVES];
-    int counter = 0;
     for (int y = 0; y < BOARD_SIZE; y++)
     {
         for (int x = 0; x < BOARD_SIZE; x++)
@@ -115,12 +122,26 @@ bool detect_game_over(GameState *game_state)
             if (game_state->board.squares[y][x].type != EMPTY &&
                 game_state->board.squares[y][x].color == game_state->turn)
             {
+                int piece_move_count = 0;
                 generate_legal_moves_by_piece(game_state, game_state->board.squares[y][x], &moves,
-                                              &counter, king.x, king.y);
+                                              &piece_move_count, x, y);
+                if (piece_move_count > 0)
+                {
+                    return;
+                }
             }
-            if (counter > 0)
+        }
+    }
+    for (int y = 0; y < BOARD_SIZE; y++)
+    {
+        for (int x = 0; x < BOARD_SIZE; x++)
+        {
+            if (game_state->board.squares[y][x].type != EMPTY &&
+                game_state->board.squares[y][x].color == game_state->turn)
             {
-                return false;
+                int piece_move_count = 0;
+                generate_legal_moves_by_piece(game_state, game_state->board.squares[y][x], &moves,
+                                              &piece_move_count, x, y);
             }
         }
     }
@@ -131,16 +152,26 @@ bool detect_game_over(GameState *game_state)
     else
     {
         game_state->is_checkmate = true;
+        game_state->winner = (game_state->turn == PIECE_WHITE) ? PIECE_BLACK : PIECE_WHITE;
     }
-    game_state->winner = game_state->turn == PIECE_WHITE ? PIECE_BLACK : PIECE_WHITE;
-    return true;
+
+    return;
+}
+
+void next_move(GameState *game_state)
+{
+    if (game_state->turn == PIECE_BLACK)
+    {
+        game_state->fullmove_number += 1;
+    }
+    game_state->turn = game_state->turn == PIECE_WHITE ? PIECE_BLACK : PIECE_WHITE;
+    detect_game_over(game_state);
 }
 
 void draw(GameState *game_state)
 {
     draw_textures();
     draw_king_attacked(game_state);
-    bool is_game_over = detect_game_over(game_state);
     if (game_state->board_status == SELECTING)
     {
         SelectedPiece piece = game_state->selected_piece;

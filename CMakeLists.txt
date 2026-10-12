@@ -13,6 +13,7 @@ add_executable(Chess
     src/fen.c
     src/game.c
     src/moves.c
+    src/engine.c
 )
 
 

@@ -201,10 +201,8 @@ void generate_pseudo_pawn_moves(GameState *game_state_moves, Piece piece, Move (
     int direction = game_state_moves->turn == PIECE_WHITE ? -1 : 1;
     int next_y = y + direction;
 
-    // Check bounds before accessing the board
     if (next_y < 0 || next_y >= BOARD_SIZE)
         return;
-
     if (game_state_moves->board.squares[next_y][x].type == EMPTY)
     {
         add_move((Move){(next_y == 0 && piece.color == PIECE_WHITE) ||
@@ -511,7 +509,7 @@ void generate_legal_moves_by_piece(GameState *game_state_moves, Piece piece,
     *counter = legal_move_counter;
 }
 
-int generate_pseudo_moves(GameState *game_state_moves, Move (*pseudo)[MAX_MOVES])
+int generate_moves(GameState *game_state_moves, Move (*pseudo)[MAX_MOVES])
 {
     int counter = 0;
     for (int y = 0; y < BOARD_SIZE; y++)
@@ -521,29 +519,13 @@ int generate_pseudo_moves(GameState *game_state_moves, Move (*pseudo)[MAX_MOVES]
             if (game_state_moves->board.squares[y][x].color == game_state_moves->turn &&
                 game_state_moves->board.squares[y][x].type != EMPTY)
             {
-                generate_pseudo_moves_by_piece(game_state_moves,
-                                               game_state_moves->board.squares[y][x], pseudo,
-                                               &counter, x, y);
+                generate_legal_moves_by_piece(game_state_moves,
+                                              game_state_moves->board.squares[y][x], pseudo,
+                                              &counter, x, y);
             }
         }
     }
     return counter;
-}
-
-int generate_legal_moves(GameState *game_state_moves, Move *moves[MAX_MOVES])
-{
-    Move pseudo_moves[MAX_MOVES];
-    int count = generate_pseudo_moves(game_state_moves, &pseudo_moves);
-    return 0;
-}
-
-void next_move(GameState *game_state)
-{
-    if (game_state->turn == PIECE_BLACK)
-    {
-        game_state->fullmove_number += 1;
-    }
-    game_state->turn = game_state->turn == PIECE_WHITE ? PIECE_BLACK : PIECE_WHITE;
 }
 
 void make_move_normal(Piece *from_piece_pointer, Piece *to_piece_pointer)
@@ -562,6 +544,15 @@ void make_move_promotion(GameState *game_state, Piece *from_piece_pointer, Piece
     game_state->promotion_overlay_open = true;
     game_state->selected_piece =
         (SelectedPiece){to_piece_pointer->type, from_piece_pointer->color, x, y};
+}
+
+void make_move_promotion_ai(GameState *game_state, Piece *from_piece_pointer,
+                            Piece *to_piece_pointer, int x, int y)
+{
+    to_piece_pointer->color = from_piece_pointer->color;
+    to_piece_pointer->type = from_piece_pointer->type;
+    to_piece_pointer->type = QUEEN;
+    from_piece_pointer->type = EMPTY;
 }
 
 void make_move_en_passant(Piece *from_piece_pointer, Piece *to_piece_pointer, Move move,
@@ -611,8 +602,31 @@ void make_move(GameState *game_state, Move move)
         make_move_castle(from_piece_pointer, to_piece_pointer, move, &game_state->board);
         break;
     }
-    next_move(game_state);
 }
+
+void make_move_wo_next_move_ai(GameState *game_state, Move move)
+{
+    Piece *from_piece_pointer = &game_state->board.squares[move.from_y][move.from_x];
+    Piece *to_piece_pointer = &game_state->board.squares[move.to_y][move.to_x];
+    switch (move.type)
+    {
+    case MOVE_NORMAL:
+        make_move_normal(from_piece_pointer, to_piece_pointer);
+        break;
+    case MOVE_PROMOTION:
+        make_move_promotion_ai(game_state, from_piece_pointer, to_piece_pointer, move.to_x,
+                               move.to_y);
+        break;
+    case MOVE_EN_PASSANT:
+        make_move_en_passant(from_piece_pointer, to_piece_pointer, move, &game_state->board);
+        break;
+    case MOVE_CASTLE:
+        make_move_castle(from_piece_pointer, to_piece_pointer, move, &game_state->board);
+        break;
+    }
+}
+
+void unmake_move() {}
 
 bool moves_equal(Move a, Move b)
 {

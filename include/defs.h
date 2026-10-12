@@ -22,6 +22,8 @@
 #define BOARD_SIZE 8
 #define MAX_MOVES 256
 
+#define INF 9999999
+
 #define TEST(condition)                                                                            \
     do                                                                                             \
     {                                                                                              \
