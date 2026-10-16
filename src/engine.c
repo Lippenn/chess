@@ -23,6 +23,8 @@ double calculate_piece_score(PieceType type)
     }
 }
 
+// double calculate_material
+
 double calculate_position_score(GameState game_state)
 {
     int score = 0;
@@ -62,7 +64,11 @@ double min_max(int depth, GameState *game_state, bool is_maximising)
             char fen[1024];
             generate_fen(game_state, fen);
             make_move_wo_next_move_ai(game_state, moves[i]);
-            max_score = min_max(depth - 1, game_state, false);
+            double score = min_max(depth - 1, game_state, false);
+            if (score > max_score)
+            {
+                max_score = score;
+            }
             load_fen(game_state, fen);
         }
         return max_score;
@@ -77,7 +83,11 @@ double min_max(int depth, GameState *game_state, bool is_maximising)
             char fen[1024];
             generate_fen(game_state, fen);
             make_move_wo_next_move_ai(game_state, moves[i]);
-            min_score = min_max(depth - 1, game_state, false);
+            double score = min_max(depth - 1, game_state, true);
+            if (score < min_score)
+            {
+                min_score = score;
+            }
             load_fen(game_state, fen);
         }
         return min_score;
@@ -86,7 +96,7 @@ double min_max(int depth, GameState *game_state, bool is_maximising)
 
 Move evaluate_position(GameState *game_state)
 {
-    int depth = 3;
+    int depth = 4;
     Move best_move;
     int best_score = 0;
     if (game_state->turn == PIECE_WHITE)
@@ -99,10 +109,10 @@ Move evaluate_position(GameState *game_state)
             char fen[1024];
             generate_fen(game_state, fen);
             make_move_wo_next_move_ai(game_state, moves[i]);
-            int score = min_max(depth - 1, game_state, false);
+            int score = min_max(depth - 1, game_state, true);
             load_fen(game_state, fen);
 
-            if (score > best_score)
+            if ((score > best_score) || i == 0)
             {
                 best_score = score;
                 best_move = moves[i];
@@ -121,17 +131,20 @@ Move evaluate_position(GameState *game_state)
             make_move_wo_next_move_ai(game_state, moves[i]);
             int score = min_max(depth - 1, game_state, false);
             load_fen(game_state, fen);
-
-            if (score < best_score)
+            // printf("SCORE : %i,%i, MOVE X : %i - %i, Y : %i - %i\n", score, best_score,
+            //        moves[i].from_x, moves[i].to_x, moves[i].from_y, moves[i].to_y);
+            // printf("----------------------------------------------------------------------!\n");
+            if ((score < best_score) || i == 0)
             {
+                // printf("BEST\n");
                 best_score = score;
                 best_move = moves[i];
             }
         }
     }
-    printf("BEST MOVE X : %i - %i, Y : %i - %i\n", best_move.from_x, best_move.to_x,
-           best_move.from_y, best_move.to_y);
-    printf("BEST SCORE : %i\n", best_score);
-    printf("----------------------------------------------------------------------!\n");
+    // printf("BEST MOVE X : %i - %i, Y : %i - %i\n", best_move.from_x, best_move.to_x,
+    //        best_move.from_y, best_move.to_y);
+    // printf("BEST SCORE : %i\n", best_score);
+    // printf("----------------------------------------------------------------------!\n");
     return best_move;
 }

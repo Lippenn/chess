@@ -1,10 +1,12 @@
 #include "./draw.h"
+#include "./fen.h"
 #include "./game.h"
 #include "./moves.h"
 #include "./textures.h"
 #include "raylib.h"
 #include <math.h>
 #include <string.h>
+
 
 Rectangle board = {0, 100, BOARD_WIDTH, BOARD_HEIGHT};
 RenderTexture2D board_texture;
@@ -240,6 +242,15 @@ void draw_game_over_overlay(GameState *game_state)
     if (draw_button(reset_button, "RESET", 20))
     {
         reset_game(game_state);
+    }
+}
+
+void draw_copy_fen_button()
+{
+    Rectangle flip_button = {20, HEADER_HEIGHT + BOARD_HEIGHT + 25, 100, 50};
+
+    if (draw_button(flip_button, "COPY FEN", 20))
+    {
     }
 }
 

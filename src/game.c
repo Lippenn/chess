@@ -10,7 +10,7 @@ void init_game_state(GameState *game_state)
 {
     Board board;
     load_fen(game_state, "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1");
-    load_fen(game_state, "r5rk/5p1p/5R2/4B3/8/8/7P/7K w - - 0 1");
+    load_fen(game_state, "rn2kb1r/ppp1pppp/5n2/3q4/3P4/5N2/PPP2PPP/RNBQKB1R w KQkq - 1 5");
     game_state->board_status = NONE;
 }
 
